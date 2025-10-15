@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devoluciones y Garantías</title>
+    <link rel="icon" href="./img/LogoHEPA.png" type="image/x-icon">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* Custom styles for a better look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* light gray background */
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #3b82f6;
+            color: white;
+        }
+        /* Custom modal styles */
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        /* Notification toast styles */
+        #notification {
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        #notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg text-white z-50">
+        <p id="notification-message"></p>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Gestión de Devoluciones y Garantías</h1>
+            <p class="text-gray-500 mt-2">Refaccionarias HEPA</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="mb-6 flex flex-wrap justify-center border-b border-gray-200">
+            <button data-tab="devoluciones" class="tab-button active text-lg py-3 px-6 font-semibold border-b-2 border-transparent hover:bg-blue-100 rounded-t-lg">
+                <i class="fas fa-undo-alt mr-2"></i>Registrar Devolución
+            </button>
+            <button data-tab="proveedores" class="tab-button text-lg py-3 px-6 font-semibold border-b-2 border-transparent hover:bg-blue-100 rounded-t-lg">
+                <i class="fas fa-truck mr-2"></i>Gestionar Proveedores
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Devoluciones Tab -->
+            <div id="devoluciones" class="tab-content">
+                <!-- Add Return Form -->
+                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-700 border-b pb-2">Agregar Nuevo Artículo para Devolución</h2>
+                    <form id="form-devolucion" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label for="proveedor" class="block text-sm font-medium text-gray-600 mb-1">Proveedor</label>
+                            <select id="proveedor" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                        </div>
+                        <div>
+                            <label for="departamento" class="block text-sm font-medium text-gray-600 mb-1">Departamento</label>
+                            <select id="departamento" name="departamento" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">-- Seleccione un departamento --</option>
+                                <option value="VOLKSWAGEN">VOLKSWAGEN</option>
+                                <option value="NISSAN">NISSAN</option>
+                                <option value="CHEVROLET">CHEVROLET</option>
+                                <option value="TOYOTA">TOYOTA</option>
+                                <option value="RENAULT">RENAULT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="num_articulo" class="block text-sm font-medium text-gray-600 mb-1">Número de Artículo</label>
+                            <input type="text" id="num_articulo" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="descripcion" class="block text-sm font-medium text-gray-600 mb-1">Descripción del Artículo</label>
+                            <input type="text" id="descripcion" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="cantidad" class="block text-sm font-medium text-gray-600 mb-1">Cantidad (piezas)</label>
+                            <input type="number" id="cantidad" required min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="num_factura" class="block text-sm font-medium text-gray-600 mb-1">Número de Factura</label>
+                            <input type="text" id="num_factura" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="motivo" class="block text-sm font-medium text-gray-600 mb-1">Motivo</label>
+                            <select id="motivo" name="motivo" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">-- Seleccione un motivo --</option>
+                                <option value="Devolución">Devolución</option>
+                                <option value="Garantía">Garantía</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                        <div id="otro-motivo-container" class="hidden md:col-span-2 lg:col-span-1">
+                             <label for="otro_motivo" class="block text-sm font-medium text-gray-600 mb-1">Especifique el motivo</label>
+                             <input type="text" id="otro_motivo" name="otro_motivo" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-3">
+                            <label for="observaciones" class="block text-sm font-medium text-gray-600 mb-1">Observaciones</label>
+                            <textarea id="observaciones" rows="3" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                        <div class="md:col-span-2 lg:col-span-3 text-right">
+                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                                <i class="fas fa-plus-circle mr-2"></i>Agregar Incidencia
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Returns List -->
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                     <h2 class="text-2xl font-semibold mb-4 text-gray-700">Listado de Devoluciones y Garantías</h2>
+                     
+                     <!-- Filters and Export -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center gap-2">
+                             <label for="filtro-fecha-inicio" class="text-sm font-medium">Desde:</label>
+                             <input type="date" id="filtro-fecha-inicio" class="p-2 border border-gray-300 rounded-md text-sm">
+                             <label for="filtro-fecha-fin" class="text-sm font-medium">Hasta:</label>
+                             <input type="date" id="filtro-fecha-fin" class="p-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <p class="text-sm font-medium mr-2">Exportar:</p>
+                            <button id="export-pdf" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</button>
+                            <button id="export-csv" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-md text-sm"><i class="fas fa-file-csv mr-1"></i>Excel</button>
+                            <button id="export-share" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1 px-3 rounded-md text-sm"><i class="fas fa-share-alt mr-1"></i>Compartir</button>
+                        </div>
+                    </div>
+
+                    <!-- Search Bar -->
+                     <div class="relative mb-4">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </span>
+                        <input type="text" id="barra-busqueda" placeholder="Buscar por cualquier dato..." class="w-full p-3 pl-10 border border-gray-300 rounded-full shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Folio</th>
+                                    <th scope="col" class="px-6 py-3">Proveedor</th>
+                                    <th scope="col" class="px-6 py-3">Departamento</th>
+                                    <th scope="col" class="px-6 py-3"># Artículo</th>
+                                    <th scope="col" class="px-6 py-3">Descripción</th>
+                                    <th scope="col" class="px-6 py-3">Pzs.</th>
+                                    <th scope="col" class="px-6 py-3"># Factura</th>
+                                    <th scope="col" class="px-6 py-3">Fecha</th>
+                                    <th scope="col" class="px-6 py-3">Motivo</th>
+                                    <th scope="col" class="px-6 py-3">Estado</th>
+                                    <th scope="col" class="px-6 py-3">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-devoluciones" class="bg-white divide-y">
+                                <!-- JS will populate this -->
+                                <tr><td colspan="11" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proveedores Tab -->
+            <div id="proveedores" class="tab-content hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <!-- Add Provider Form -->
+                     <div class="bg-white p-6 rounded-xl shadow-md">
+                         <h2 class="text-2xl font-semibold mb-4 text-gray-700 border-b pb-2">Registrar Nuevo Proveedor</h2>
+                         <form id="form-proveedor" class="space-y-4">
+                            <div>
+                                <label for="nombre_proveedor" class="block text-sm font-medium text-gray-600 mb-1">Nombre del Proveedor</label>
+                                <input type="text" id="nombre_proveedor" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div class="text-right">
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                                    <i class="fas fa-save mr-2"></i>Guardar Proveedor
+                                </button>
+                            </div>
+                        </form>
+                     </div>
+                     <!-- Providers List -->
+                     <div class="bg-white p-6 rounded-xl shadow-md">
+                         <h2 class="text-2xl font-semibold mb-4 text-gray-700">Proveedores Registrados</h2>
+                         <ul id="lista-proveedores" class="space-y-2 max-h-96 overflow-y-auto">
+                            <!-- JS will populate this -->
+                            <li class="text-center p-8 text-gray-500">Cargando proveedores...</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // --- Configuration and Initialization ---
+        const firebaseConfig = {
+        apiKey: "AIzaSyAludipJQEbPavFOEGut5ybNvsF6SSClAo",
+        authDomain: "devoluciones-hepa.firebaseapp.com",
+        projectId: "devoluciones-hepa",
+        storageBucket: "devoluciones-hepa.firebasestorage.app",
+        messagingSenderId: "468861245873",
+        appId: "1:468861245873:web:e116865404a7127392c590"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        setLogLevel('debug');
+
+        const appId = app.options.appId; // <-- AÑADE ESTA LÍNEA
+
+        let allReturns = []; // Cache for all returns to filter locally
+        let allProviders = []; // Cache for all providers
+
+        // --- Authentication ---
+        async function authenticateUser() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Signed in with custom token.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
+                }
+            } catch (error) {
+                console.error("Authentication Error:", error);
+                showNotification("Error de autenticación. Algunas funciones pueden no estar disponibles.", "error");
+            }
+        }
+
+        // --- UI Helper Functions ---
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageP = document.getElementById('notification-message');
+            messageP.textContent = message;
+
+            notification.className = 'fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg text-white z-50'; // Reset classes
+            if (type === 'success') {
+                notification.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                notification.classList.add('bg-red-500');
+            } else {
+                notification.classList.add('bg-blue-500');
+            }
+            
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'Aprobado':
+                    return 'bg-green-100 text-green-800';
+                case 'Rechazado':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-yellow-100 text-yellow-800';
+            }
+        }
+
+        // --- Supplier Management ---
+        const providersCollection = collection(db, 'proveedores'); // <-- CAMBIA ESTA LÍNEA
+        const formProveedor = document.getElementById('form-proveedor');
+        const nombreProveedorInput = document.getElementById('nombre_proveedor');
+
+        formProveedor.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombreProveedor = nombreProveedorInput.value.trim();
+            if (nombreProveedor) {
+                try {
+                    await addDoc(providersCollection, { nombre: nombreProveedor });
+                    showNotification("Proveedor guardado con éxito.");
+                    formProveedor.reset();
+                } catch (error) {
+                    console.error("Error adding provider: ", error);
+                    showNotification("Error al guardar el proveedor.", "error");
+                }
+            }
+        });
+
+        function renderProviders(providers) {
+            const providerList = document.getElementById('lista-proveedores');
+            const providerSelect = document.getElementById('proveedor');
+            
+            providerList.innerHTML = '';
+            providerSelect.innerHTML = '<option value="">-- Seleccione un proveedor --</option>';
+            
+            if (providers.length === 0) {
+                 providerList.innerHTML = '<li class="text-center p-4 text-gray-500">No hay proveedores registrados.</li>';
+            }
+
+            providers.forEach(provider => {
+                // Populate list
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center p-2 bg-gray-50 rounded-md';
+                li.dataset.id = provider.id;
+                li.innerHTML = `
+                    <span class="provider-name">${provider.nombre}</span>
+                    <div class="flex items-center gap-3">
+                        <button class="edit-provider-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                        <button class="delete-provider-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                providerList.appendChild(li);
+
+                // Populate select dropdown
+                const option = document.createElement('option');
+                option.value = provider.nombre;
+                option.textContent = provider.nombre;
+                providerSelect.appendChild(option);
+            });
+        }
+        
+        // --- Returns Management ---
+        const returnsCollection = collection(db, 'devoluciones'); // <-- CAMBIA ESTA LÍNEA
+        const formDevolucion = document.getElementById('form-devolucion');
+
+        formDevolucion.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(formDevolucion);
+            const motivo = document.getElementById('motivo').value;
+            let motivoFinal = motivo;
+            if (motivo === 'Otros') {
+                const otroMotivo = document.getElementById('otro_motivo').value.trim();
+                if (otroMotivo) {
+                    motivoFinal = `Otros: ${otroMotivo}`;
+                } else {
+                    showNotification("Por favor, especifique el motivo en el campo de texto.", "error");
+                    return;
+                }
+            }
+            
+            const returnData = {
+                folio: Math.floor(1000 + Math.random() * 9000).toString(), // Genera folio de 4 dígitos
+                proveedor: document.getElementById('proveedor').value,
+                departamento: document.getElementById('departamento').value,
+                num_articulo: document.getElementById('num_articulo').value,
+                descripcion: document.getElementById('descripcion').value,
+                cantidad: parseInt(document.getElementById('cantidad').value, 10),
+                num_factura: document.getElementById('num_factura').value,
+                observaciones: document.getElementById('observaciones').value,
+                motivo: motivoFinal,
+                fecha: new Date().toISOString(),
+                status: 'Pendiente'
+            };
+
+            try {
+                await addDoc(returnsCollection, returnData);
+                showNotification("Devolución registrada con éxito.");
+                formDevolucion.reset();
+                document.getElementById('otro-motivo-container').classList.add('hidden');
+            } catch (error) {
+                console.error("Error adding return: ", error);
+                showNotification("Error al registrar la devolución.", "error");
+            }
+        });
+
+        function renderReturns(returns) {
+             const returnsList = document.getElementById('lista-devoluciones');
+             returnsList.innerHTML = '';
+             
+             if (returns.length === 0) {
+                 returnsList.innerHTML = '<tr><td colspan="11" class="text-center p-8 text-gray-500">No se encontraron registros.</td></tr>';
+                 return;
+             }
+
+             returns.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-gray-900">${item.folio || 'N/A'}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900">${item.proveedor}</td>
+                    <td class="px-6 py-4">${item.departamento || 'N/A'}</td>
+                    <td class="px-6 py-4">${item.num_articulo}</td>
+                    <td class="px-6 py-4">${item.descripcion}</td>
+                    <td class="px-6 py-4 text-center">${item.cantidad}</td>
+                    <td class="px-6 py-4">${item.num_factura}</td>
+                    <td class="px-6 py-4">${new Date(item.fecha).toLocaleDateString()}</td>
+                    <td class="px-6 py-4">${item.motivo || ''}</td>
+                    <td class="px-6 py-4">
+                        <select data-id="${item.id}" class="status-select text-xs p-1 rounded-md border-0 ${getStatusBadge(item.status)}">
+                            <option value="Pendiente" ${item.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                            <option value="Aprobado" ${item.status === 'Aprobado' ? 'selected' : ''}>Aprobado</option>
+                            <option value="Rechazado" ${item.status === 'Rechazado' ? 'selected' : ''}>Rechazado</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button data-id="${item.id}" class="delete-return-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                returnsList.appendChild(tr);
+             });
+        }
+        
+        // --- Filtering and Searching ---
+        function filterAndRender() {
+            const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
+            let filtered = allReturns;
+
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    Object.values(item).some(val => 
+                        String(val).toLowerCase().includes(searchTerm)
+                    )
+                );
+            }
+            renderReturns(filtered);
+        }
+
+        // --- Data Export ---
+        function getFilteredDataForExport() {
+             const startDate = document.getElementById('filtro-fecha-inicio').value;
+             const endDate = document.getElementById('filtro-fecha-fin').value;
+             let data = allReturns;
+
+             if (startDate) {
+                 data = data.filter(item => new Date(item.fecha) >= new Date(startDate));
+             }
+             if (endDate) {
+                // Add 1 day to end date to include the whole day
+                const end = new Date(endDate);
+                end.setDate(end.getDate() + 1);
+                data = data.filter(item => new Date(item.fecha) < end);
+             }
+             return data;
+        }
+
+        document.getElementById('export-pdf').addEventListener('click', () => {
+            const data = getFilteredDataForExport();
+            if (data.length === 0) {
+                showNotification("No hay datos para exportar en el rango seleccionado.", "info");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.autoTable({
+                head: [['Folio', 'Proveedor', 'Departamento', 'Articulo', 'Descripcion', 'Pzs', 'Factura', 'Fecha', 'Motivo', 'Estado']],
+                body: data.map(item => [
+                    item.folio || 'N/A',
+                    item.proveedor,
+                    item.departamento || 'N/A',
+                    item.num_articulo,
+                    item.descripcion,
+                    item.cantidad,
+                    item.num_factura,
+                    new Date(item.fecha).toLocaleDateString(),
+                    item.motivo,
+                    item.status
+                ]),
+            });
+            doc.save('devoluciones.pdf');
+        });
+
+        document.getElementById('export-csv').addEventListener('click', () => {
+            const data = getFilteredDataForExport();
+             if (data.length === 0) {
+                showNotification("No hay datos para exportar en el rango seleccionado.", "info");
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Folio,Proveedor,Departamento,Numero Articulo,Descripcion,Cantidad,Numero Factura,Fecha,Motivo,Observaciones,Estado\n";
+            data.forEach(item => {
+                let row = [item.folio || 'N/A', item.proveedor, item.departamento || 'N/A', item.num_articulo, `"${item.descripcion}"`, item.cantidad, item.num_factura, new Date(item.fecha).toLocaleDateString(), `"${item.motivo || ''}"`, `"${item.observaciones}"`, item.status].join(",");
+                csvContent += row + "\r\n";
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "devoluciones.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+        document.getElementById('export-share').addEventListener('click', async () => {
+            const data = getFilteredDataForExport();
+            if (data.length === 0) {
+                showNotification("No hay datos para compartir en el rango seleccionado.", "info");
+                return;
+            }
+            
+            let shareText = "Resumen de Devoluciones:\n\n";
+            data.forEach(item => {
+                shareText += `Folio: ${item.folio || 'N/A'}\nProveedor: ${item.proveedor}\nDepartamento: ${item.departamento || 'N/A'}\nArtículo: ${item.descripcion}\nCantidad: ${item.cantidad}\nMotivo: ${item.motivo || 'N/A'}\nEstado: ${item.status}\n\n`;
+            });
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Reporte de Devoluciones',
+                        text: shareText,
+                    });
+                } catch(err) {
+                    console.error('Error sharing:', err);
+                }
+            } else {
+                showNotification('La función de compartir no es compatible con este navegador.', 'info');
+            }
+        });
+
+
+        // --- Event Listeners and Initial Load ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await authenticateUser();
+            
+            // Tab switching logic
+            const tabs = document.querySelectorAll('.tab-button');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => item.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = document.getElementById(tab.dataset.tab);
+                    contents.forEach(content => content.classList.add('hidden'));
+                    target.classList.remove('hidden');
+                });
+            });
+
+            // Search bar
+            document.getElementById('barra-busqueda').addEventListener('input', filterAndRender);
+
+            // Conditional "Otro Motivo" field
+            document.getElementById('motivo').addEventListener('change', (e) => {
+                const otroMotivoContainer = document.getElementById('otro-motivo-container');
+                if(e.target.value === 'Otros') {
+                    otroMotivoContainer.classList.remove('hidden');
+                } else {
+                    otroMotivoContainer.classList.add('hidden');
+                }
+            });
+            
+            // Date filters
+            document.getElementById('filtro-fecha-inicio').addEventListener('change', () => {});
+            document.getElementById('filtro-fecha-fin').addEventListener('change', () => {});
+
+
+            // Real-time listeners (onSnapshot)
+            onSnapshot(providersCollection, (snapshot) => {
+                const providers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allProviders = providers; // Cache the list
+                renderProviders(providers);
+            });
+            
+            onSnapshot(returnsCollection, (snapshot) => {
+                allReturns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Sort by date descending
+                allReturns.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                filterAndRender();
+            });
+
+            // Event delegation for dynamic elements
+            document.body.addEventListener('click', async (e) => {
+                const deleteProviderBtn = e.target.closest('.delete-provider-btn');
+                const deleteReturnBtn = e.target.closest('.delete-return-btn');
+                const editProviderBtn = e.target.closest('.edit-provider-btn');
+                const saveProviderBtn = e.target.closest('.save-provider-btn');
+                const cancelEditBtn = e.target.closest('.cancel-edit-provider-btn');
+
+                // Delete provider
+                if (deleteProviderBtn) {
+                    const id = deleteProviderBtn.closest('li').dataset.id;
+                    try {
+                        await deleteDoc(doc(db, 'proveedores', id)); // <-- CAMBIA ESTA LÍNEA
+                        showNotification("Proveedor eliminado.");
+                    } catch (error) {
+                        console.error("Error deleting provider:", error);
+                        showNotification("Error al eliminar proveedor.", "error");
+                    }
+                }
+                
+                // Delete return
+                if (deleteReturnBtn) {
+                    const id = deleteReturnBtn.closest('tr').querySelector('[data-id]').dataset.id;
+                     try {
+                        await deleteDoc(doc(db, 'devoluciones', id)); // <-- CAMBIA ESTA LÍNEA
+                        showNotification("Registro de devolución eliminado.");
+                    } catch (error) {
+                        console.error("Error deleting return:", error);
+                        showNotification("Error al eliminar el registro.", "error");
+                    }
+                }
+
+                // Edit Provider - Show input
+                if (editProviderBtn) {
+                    const li = editProviderBtn.closest('li');
+                    const providerNameSpan = li.querySelector('.provider-name');
+                    const currentName = providerNameSpan.textContent;
+                    
+                    li.innerHTML = `
+                        <input type="text" value="${currentName}" class="edit-provider-input w-full p-1 border border-blue-300 rounded-md">
+                        <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+                            <button class="save-provider-btn text-green-500 hover:text-green-700"><i class="fas fa-check"></i></button>
+                            <button class="cancel-edit-provider-btn text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                    li.querySelector('.edit-provider-input').focus();
+                }
+
+                // Save Provider Edit
+                if (saveProviderBtn) {
+                    const li = saveProviderBtn.closest('li');
+                    const input = li.querySelector('.edit-provider-input');
+                    const newName = input.value.trim();
+                    const id = li.dataset.id;
+
+                    if (newName && id) {
+                        try {
+                            const providerDocRef = doc(db, 'proveedores', id); // <-- CAMBIA ESTA LÍNEA
+                            await updateDoc(providerDocRef, { nombre: newName });
+                            showNotification("Proveedor actualizado.");
+                        } catch(error) {
+                            console.error("Error updating provider:", error);
+                            showNotification("Error al actualizar el proveedor.", "error");
+                        }
+                    } else {
+                        showNotification("El nombre no puede estar vacío.", "error");
+                        renderProviders(allProviders); // Re-render to cancel if name is empty
+                    }
+                }
+                
+                // Cancel Provider Edit
+                if (cancelEditBtn) {
+                    renderProviders(allProviders); // Re-render from cache to cancel the edit
+                }
+            });
+            
+             document.body.addEventListener('change', async (e) => {
+                 // Update status
+                 if (e.target.classList.contains('status-select')) {
+                     const id = e.target.dataset.id;
+                     const newStatus = e.target.value;
+                     try {
+                         const returnDocRef = doc(db, 'devoluciones', id); // <-- CAMBIA ESTA LÍNEA
+                         await updateDoc(returnDocRef, { status: newStatus });
+                         showNotification("Estado actualizado.");
+                     } catch(error) {
+                          console.error("Error updating status:", error);
+                          showNotification("Error al actualizar el estado.", "error");
+                     }
+                 }
+             });
+        });
+
+    </script>
+
+</body>
+</html>
