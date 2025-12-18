@@ -166,11 +166,23 @@
                      
                      <!-- Filters and Export -->
                     <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                              <label for="filtro-fecha-inicio" class="text-sm font-medium">Desde:</label>
                              <input type="date" id="filtro-fecha-inicio" class="p-2 border border-gray-300 rounded-md text-sm">
                              <label for="filtro-fecha-fin" class="text-sm font-medium">Hasta:</label>
                              <input type="date" id="filtro-fecha-fin" class="p-2 border border-gray-300 rounded-md text-sm">
+                             
+                             <select id="filtro-departamento" class="p-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Todos los Deptos</option>
+                                <option value="VOLKSWAGEN">VOLKSWAGEN</option>
+                                <option value="NISSAN">NISSAN</option>
+                                <option value="CHEVROLET">CHEVROLET</option>
+                                <option value="TOYOTA">TOYOTA</option>
+                                <option value="RENAULT">RENAULT</option>
+                            </select>
+                            <select id="filtro-proveedor" class="p-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Todos los Proveedores</option>
+                            </select>
                         </div>
                         <div class="flex items-center gap-2">
                             <p class="text-sm font-medium mr-2">Exportar:</p>
@@ -415,9 +427,12 @@
         function renderProviders(providers) {
             const providerList = document.getElementById('lista-proveedores');
             const providerSelect = document.getElementById('proveedor');
+            const filterProviderSelect = document.getElementById('filtro-proveedor');
             
             providerList.innerHTML = '';
             providerSelect.innerHTML = '<option value="">-- Seleccione un proveedor --</option>';
+            const currentFilter = filterProviderSelect.value;
+            filterProviderSelect.innerHTML = '<option value="">Todos los Proveedores</option>';
             
             if (providers.length === 0) {
                  providerList.innerHTML = '<li class="text-center p-4 text-gray-500">No hay proveedores registrados.</li>';
@@ -442,7 +457,14 @@
                 option.value = provider.nombre;
                 option.textContent = provider.nombre;
                 providerSelect.appendChild(option);
+                
+                // Populate filter dropdown
+                const optionFilter = document.createElement('option');
+                optionFilter.value = provider.nombre;
+                optionFilter.textContent = provider.nombre;
+                filterProviderSelect.appendChild(optionFilter);
             });
+            if (currentFilter) filterProviderSelect.value = currentFilter;
         }
         
         // --- Returns Management ---
@@ -537,6 +559,8 @@
         // --- Filtering and Searching ---
         function filterAndRender() {
             const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
+            const deptFilter = document.getElementById('filtro-departamento').value;
+            const provFilter = document.getElementById('filtro-proveedor').value;
             let filtered = allReturns;
 
             if (searchTerm) {
@@ -546,6 +570,12 @@
                     )
                 );
             }
+            if (deptFilter) {
+                filtered = filtered.filter(item => item.departamento === deptFilter);
+            }
+            if (provFilter) {
+                filtered = filtered.filter(item => item.proveedor === provFilter);
+            }
             renderReturns(filtered);
         }
 
@@ -554,6 +584,8 @@
              const startDate = document.getElementById('filtro-fecha-inicio').value;
              const endDate = document.getElementById('filtro-fecha-fin').value;
              const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
+             const deptFilter = document.getElementById('filtro-departamento').value;
+             const provFilter = document.getElementById('filtro-proveedor').value;
              let data = allReturns;
 
              if (startDate) {
@@ -571,6 +603,12 @@
                         String(val).toLowerCase().includes(searchTerm)
                     )
                 );
+             }
+             if (deptFilter) {
+                data = data.filter(item => item.departamento === deptFilter);
+             }
+             if (provFilter) {
+                data = data.filter(item => item.proveedor === provFilter);
              }
              return data;
         }
@@ -652,7 +690,6 @@
 
 
         // --- Event Listeners and Initial Load ---
-        document.addEventListener('DOMContentLoaded', async () => {
             // Tab switching logic
             const tabs = document.querySelectorAll('.tab-button');
             const contents = document.querySelectorAll('.tab-content');
@@ -682,6 +719,8 @@
             // Date filters
             document.getElementById('filtro-fecha-inicio').addEventListener('change', () => {});
             document.getElementById('filtro-fecha-fin').addEventListener('change', () => {});
+            document.getElementById('filtro-departamento').addEventListener('change', filterAndRender);
+            document.getElementById('filtro-proveedor').addEventListener('change', filterAndRender);
 
             // Event delegation for dynamic elements
             document.body.addEventListener('click', async (e) => {
@@ -809,7 +848,6 @@
                      }
                  }
              });
-        });
 
     </script>
 
