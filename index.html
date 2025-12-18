@@ -266,6 +266,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        
+        // Definir colecciones al inicio para evitar errores de inicialización
+        const providersCollection = collection(db, 'proveedores');
+        const returnsCollection = collection(db, 'devoluciones');
+        
         setLogLevel('debug');
         
         // Configurar persistencia en memoria para solicitar login al recargar
@@ -286,14 +291,53 @@
         const loginForm = document.getElementById('login-form');
         const logoutBtn = document.getElementById('logout-btn');
 
+        // Variables para controlar las suscripciones
+        let unsubscribeProviders = null;
+        let unsubscribeReturns = null;
+
+        function subscribeToData() {
+            // Evitar doble suscripción
+            if (unsubscribeProviders || unsubscribeReturns) return;
+
+            unsubscribeProviders = onSnapshot(providersCollection, (snapshot) => {
+                console.log("Proveedores recibidos:", snapshot.size);
+                const providers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allProviders = providers;
+                renderProviders(providers);
+            }, (error) => {
+                console.error("Error cargando proveedores:", error);
+            });
+            
+            unsubscribeReturns = onSnapshot(returnsCollection, (snapshot) => {
+                console.log("Devoluciones recibidas:", snapshot.size);
+                allReturns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allReturns.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                filterAndRender();
+            }, (error) => {
+                console.error("Error cargando devoluciones:", error);
+            });
+        }
+
+        function unsubscribeFromData() {
+            if (unsubscribeProviders) unsubscribeProviders();
+            if (unsubscribeReturns) unsubscribeReturns();
+            unsubscribeProviders = null;
+            unsubscribeReturns = null;
+            // Limpiar tablas visualmente
+            document.getElementById('lista-proveedores').innerHTML = '';
+            document.getElementById('lista-devoluciones').innerHTML = '';
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 document.getElementById('user-display').textContent = user.email;
+                subscribeToData(); // <--- Cargar datos SOLO al entrar
             } else {
                 loginOverlay.classList.remove('hidden');
                 appContent.classList.add('hidden');
+                unsubscribeFromData(); // <--- Dejar de escuchar al salir
             }
         });
 
@@ -350,7 +394,6 @@
         }
 
         // --- Supplier Management ---
-        const providersCollection = collection(db, 'proveedores'); // <-- CAMBIA ESTA LÍNEA
         const formProveedor = document.getElementById('form-proveedor');
         const nombreProveedorInput = document.getElementById('nombre_proveedor');
 
@@ -403,7 +446,6 @@
         }
         
         // --- Returns Management ---
-        const returnsCollection = collection(db, 'devoluciones'); // <-- CAMBIA ESTA LÍNEA
         const formDevolucion = document.getElementById('form-devolucion');
 
         formDevolucion.addEventListener('submit', async (e) => {
@@ -640,21 +682,6 @@
             // Date filters
             document.getElementById('filtro-fecha-inicio').addEventListener('change', () => {});
             document.getElementById('filtro-fecha-fin').addEventListener('change', () => {});
-
-
-            // Real-time listeners (onSnapshot)
-            onSnapshot(providersCollection, (snapshot) => {
-                const providers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                allProviders = providers; // Cache the list
-                renderProviders(providers);
-            });
-            
-            onSnapshot(returnsCollection, (snapshot) => {
-                allReturns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Sort by date descending
-                allReturns.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-                filterAndRender();
-            });
 
             // Event delegation for dynamic elements
             document.body.addEventListener('click', async (e) => {
