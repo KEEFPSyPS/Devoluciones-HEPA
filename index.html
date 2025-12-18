@@ -44,12 +44,41 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="fixed inset-0 bg-gray-800 z-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">Bienvenido</h2>
+                <p class="text-gray-500 mt-2">Inicia sesión para acceder al sistema</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                    <input type="email" id="login-email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                    <input type="password" id="login-password" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105">
+                    Ingresar
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="notification" class="fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg text-white z-50">
         <p id="notification-message"></p>
     </div>
 
-    <div class="container mx-auto p-4 md:p-8">
+    <div id="app-content" class="container mx-auto p-4 md:p-8 hidden">
+        <div class="flex justify-end items-center gap-4">
+            <span id="user-display" class="text-sm font-medium text-gray-600"></span>
+            <button id="logout-btn" class="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
         <header class="text-center mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Gestión de Devoluciones y Garantías</h1>
             <p class="text-gray-500 mt-2">Refaccionarias HEPA</p>
@@ -170,13 +199,14 @@
                                     <th scope="col" class="px-6 py-3"># Factura</th>
                                     <th scope="col" class="px-6 py-3">Fecha</th>
                                     <th scope="col" class="px-6 py-3">Motivo</th>
+                                    <th scope="col" class="px-6 py-3">Observaciones</th>
                                     <th scope="col" class="px-6 py-3">Estado</th>
                                     <th scope="col" class="px-6 py-3">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="lista-devoluciones" class="bg-white divide-y">
                                 <!-- JS will populate this -->
-                                <tr><td colspan="11" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
+                                <tr><td colspan="12" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -219,7 +249,7 @@
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- Configuration and Initialization ---
         const firebaseConfig = {
@@ -235,6 +265,13 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         setLogLevel('debug');
+        
+        // Configurar persistencia en memoria para solicitar login al recargar
+        try {
+            await setPersistence(auth, inMemoryPersistence);
+        } catch (error) {
+            console.error("Error configurando persistencia:", error);
+        }
 
         const appId = app.options.appId; // <-- AÑADE ESTA LÍNEA
 
@@ -242,20 +279,41 @@
         let allProviders = []; // Cache for all providers
 
         // --- Authentication ---
-        async function authenticateUser() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                    console.log("Signed in with custom token.");
-                } else {
-                    await signInAnonymously(auth);
-                    console.log("Signed in anonymously.");
-                }
-            } catch (error) {
-                console.error("Authentication Error:", error);
-                showNotification("Error de autenticación. Algunas funciones pueden no estar disponibles.", "error");
+        const loginOverlay = document.getElementById('login-overlay');
+        const appContent = document.getElementById('app-content');
+        const loginForm = document.getElementById('login-form');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginOverlay.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                document.getElementById('user-display').textContent = user.email;
+            } else {
+                loginOverlay.classList.remove('hidden');
+                appContent.classList.add('hidden');
             }
-        }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                console.error("Login error:", error);
+                showNotification("Error al iniciar sesión. Verifique sus credenciales.", "error");
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        });
 
         // --- UI Helper Functions ---
         function showNotification(message, type = 'success') {
@@ -391,13 +449,21 @@
              returnsList.innerHTML = '';
              
              if (returns.length === 0) {
-                 returnsList.innerHTML = '<tr><td colspan="11" class="text-center p-8 text-gray-500">No se encontraron registros.</td></tr>';
+                 returnsList.innerHTML = '<tr><td colspan="12" class="text-center p-8 text-gray-500">No se encontraron registros.</td></tr>';
                  return;
              }
 
              returns.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50';
+                
+                let statusTooltip = "";
+                if (item.status === 'Aprobado' && item.fecha_aprobacion) {
+                    statusTooltip = `Aprobado el: ${new Date(item.fecha_aprobacion).toLocaleString()}\nRecogió: ${item.persona_recogio || 'N/A'}`;
+                } else if (item.status === 'Rechazado') {
+                    statusTooltip = `Rechazado por: ${item.persona_rechazo || 'N/A'}\nMotivo: ${item.motivo_rechazo || 'N/A'}`;
+                }
+
                 tr.innerHTML = `
                     <td class="px-6 py-4 font-bold text-gray-900">${item.folio || 'N/A'}</td>
                     <td class="px-6 py-4 font-medium text-gray-900">${item.proveedor}</td>
@@ -408,8 +474,9 @@
                     <td class="px-6 py-4">${item.num_factura}</td>
                     <td class="px-6 py-4">${new Date(item.fecha).toLocaleDateString()}</td>
                     <td class="px-6 py-4">${item.motivo || ''}</td>
+                    <td class="px-6 py-4">${item.observaciones || ''}</td>
                     <td class="px-6 py-4">
-                        <select data-id="${item.id}" class="status-select text-xs p-1 rounded-md border-0 ${getStatusBadge(item.status)}">
+                        <select data-id="${item.id}" title="${statusTooltip}" class="status-select text-xs p-1 rounded-md border-0 ${getStatusBadge(item.status)}">
                             <option value="Pendiente" ${item.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
                             <option value="Aprobado" ${item.status === 'Aprobado' ? 'selected' : ''}>Aprobado</option>
                             <option value="Rechazado" ${item.status === 'Rechazado' ? 'selected' : ''}>Rechazado</option>
@@ -442,6 +509,7 @@
         function getFilteredDataForExport() {
              const startDate = document.getElementById('filtro-fecha-inicio').value;
              const endDate = document.getElementById('filtro-fecha-fin').value;
+             const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
              let data = allReturns;
 
              if (startDate) {
@@ -452,6 +520,13 @@
                 const end = new Date(endDate);
                 end.setDate(end.getDate() + 1);
                 data = data.filter(item => new Date(item.fecha) < end);
+             }
+             if (searchTerm) {
+                data = data.filter(item => 
+                    Object.values(item).some(val => 
+                        String(val).toLowerCase().includes(searchTerm)
+                    )
+                );
              }
              return data;
         }
@@ -466,7 +541,7 @@
             const doc = new jsPDF();
             
             doc.autoTable({
-                head: [['Folio', 'Proveedor', 'Departamento', 'Articulo', 'Descripcion', 'Pzs', 'Factura', 'Fecha', 'Motivo', 'Estado']],
+                head: [['Folio', 'Proveedor', 'Departamento', 'Articulo', 'Descripcion', 'Pzs', 'Factura', 'Fecha', 'Motivo', 'Observaciones', 'Estado']],
                 body: data.map(item => [
                     item.folio || 'N/A',
                     item.proveedor,
@@ -477,6 +552,7 @@
                     item.num_factura,
                     new Date(item.fecha).toLocaleDateString(),
                     item.motivo,
+                    item.observaciones || '',
                     item.status
                 ]),
             });
@@ -513,7 +589,7 @@
             
             let shareText = "Resumen de Devoluciones:\n\n";
             data.forEach(item => {
-                shareText += `Folio: ${item.folio || 'N/A'}\nProveedor: ${item.proveedor}\nDepartamento: ${item.departamento || 'N/A'}\nArtículo: ${item.descripcion}\nCantidad: ${item.cantidad}\nMotivo: ${item.motivo || 'N/A'}\nEstado: ${item.status}\n\n`;
+                shareText += `Folio: ${item.folio || 'N/A'}\nProveedor: ${item.proveedor}\nDepartamento: ${item.departamento || 'N/A'}\nArtículo: ${item.descripcion}\nCantidad: ${item.cantidad}\nMotivo: ${item.motivo || 'N/A'}\nObservaciones: ${item.observaciones || 'N/A'}\nEstado: ${item.status}\n\n`;
             });
             
             if (navigator.share) {
@@ -533,8 +609,6 @@
 
         // --- Event Listeners and Initial Load ---
         document.addEventListener('DOMContentLoaded', async () => {
-            await authenticateUser();
-            
             // Tab switching logic
             const tabs = document.querySelectorAll('.tab-button');
             const contents = document.querySelectorAll('.tab-content');
@@ -659,15 +733,50 @@
              document.body.addEventListener('change', async (e) => {
                  // Update status
                  if (e.target.classList.contains('status-select')) {
-                     const id = e.target.dataset.id;
-                     const newStatus = e.target.value;
+                     const select = e.target;
+                     const id = select.dataset.id;
+                     const newStatus = select.value;
+                     
+                     // Find current item to get old status for reverting if needed
+                     const currentItem = allReturns.find(i => i.id === id);
+                     const oldStatus = currentItem ? currentItem.status : 'Pendiente';
+                     
+                     let updateData = { status: newStatus };
+                     
+                     if (newStatus === 'Aprobado') {
+                         const persona = prompt("Ingrese el nombre de la persona que recogió la garantía/devolución:");
+                         if (persona === null || persona.trim() === "") {
+                             alert("Debe ingresar el nombre de la persona para aprobar.");
+                             select.value = oldStatus;
+                             return;
+                         }
+                         updateData.fecha_aprobacion = new Date().toISOString();
+                         updateData.persona_recogio = persona.trim();
+                     } else if (newStatus === 'Rechazado') {
+                         const motivoRechazo = prompt("Ingrese el motivo del rechazo:");
+                         if (motivoRechazo === null || motivoRechazo.trim() === "") {
+                             alert("Debe ingresar un motivo para rechazar.");
+                             select.value = oldStatus;
+                             return;
+                         }
+                         const personaRechazo = prompt("Ingrese el nombre de la persona que rechazó:");
+                         if (personaRechazo === null || personaRechazo.trim() === "") {
+                             alert("Debe ingresar el nombre de la persona que rechazó.");
+                             select.value = oldStatus;
+                             return;
+                         }
+                         updateData.motivo_rechazo = motivoRechazo.trim();
+                         updateData.persona_rechazo = personaRechazo.trim();
+                     }
+
                      try {
                          const returnDocRef = doc(db, 'devoluciones', id); // <-- CAMBIA ESTA LÍNEA
-                         await updateDoc(returnDocRef, { status: newStatus });
+                         await updateDoc(returnDocRef, updateData);
                          showNotification("Estado actualizado.");
                      } catch(error) {
                           console.error("Error updating status:", error);
                           showNotification("Error al actualizar el estado.", "error");
+                          select.value = oldStatus;
                      }
                  }
              });
