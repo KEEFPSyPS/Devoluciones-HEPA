@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Devoluciones y Garantías</title>
+    
+    <!-- PWA Standard Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Garantías HEPA">
+    <link rel="apple-touch-icon" href="./img/logoAppHepa.png">
+
     <link rel="icon" href="./img/LogoHEPA.png" type="image/x-icon">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,23 +23,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
         /* Custom styles for a better look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* light gray background */
+            background-color: #f8fafc; /* slate-50 */
         }
         .tab-button {
             transition: all 0.3s ease;
+            position: relative;
         }
         .tab-button.active {
-            border-color: #3b82f6; /* blue-500 */
-            background-color: #3b82f6;
-            color: white;
+            color: #2563eb; /* blue-600 */
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #2563eb;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
         }
         /* Custom modal styles */
-        .modal {
-            transition: opacity 0.3s ease;
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
-        /* Notification toast styles */
         #notification {
             transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
             transform: translateY(-100%);
@@ -42,26 +64,34 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-700">
 
     <!-- Login Overlay -->
-    <div id="login-overlay" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-4 border-t-4 border-blue-600">
+    <div id="login-overlay" class="fixed inset-0 bg-gradient-to-br from-slate-900 to-slate-800 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 overflow-hidden">
+             <!-- Decorative blobs -->
+            <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 translate-y-1/2"></div>
+        </div>
+        
+        <div class="glass-effect p-8 md:p-10 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-white/20 relative z-10">
             <div class="text-center mb-8">
-                <img src="./img/LogoHEPA.png" alt="Logo HEPA" class="h-24 mx-auto mb-4 object-contain">
-                <h2 class="text-2xl font-bold text-gray-800">Bienvenido</h2>
-                <p class="text-gray-500 text-sm mt-2">Sistema de Gestión de Devoluciones</p>
+                <div class="bg-white p-2 rounded-xl inline-block shadow-md mb-4">
+                    <img src="./img/LogoHEPA.png" alt="Logo HEPA" class="h-16 w-auto object-contain">
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Bienvenido</h2>
+                <p class="text-slate-500 text-sm mt-2">Sistema de Gestión de Devoluciones</p>
             </div>
             <form id="login-form" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-                    <input type="email" id="login-email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Correo Electrónico</label>
+                    <input type="email" id="login-email" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" id="login-password" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Contraseña</label>
+                    <input type="password" id="login-password" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm text-sm">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105">
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 active:scale-95">
                     Ingresar
                 </button>
             </form>
@@ -73,44 +103,60 @@
         <p id="notification-message"></p>
     </div>
 
-    <div id="app-content" class="container mx-auto p-4 md:p-8 hidden">
-        <div class="flex justify-end items-center gap-4">
-            <span id="user-display" class="text-sm font-medium text-gray-600"></span>
-            <button id="logout-btn" class="text-sm text-red-600 hover:text-red-800 font-semibold flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition">
-                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-            </button>
-        </div>
-        <header class="text-center mb-8">
-            <img src="./img/LogoHEPA.png" alt="Logo HEPA" class="h-24 mx-auto mb-4 object-contain">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-700">Gestión de Devoluciones y Garantías</h1>
-            <p class="text-gray-500 mt-2">Refaccionarias HEPA</p>
+    <div id="app-content" class="min-h-screen hidden flex flex-col">
+        <!-- Header Moderno -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            <div class="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="./img/LogoHEPA.png" alt="Logo HEPA" class="h-8 md:h-10 w-auto object-contain">
+                    <div class="hidden md:block w-px h-6 bg-slate-300 mx-2"></div>
+                    <h1 class="hidden md:block text-lg font-bold text-slate-700 tracking-tight">Gestión de Devoluciones</h1>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full">
+                        <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="user-display" class="text-xs md:text-sm font-medium text-slate-600 truncate max-w-[150px]"></span>
+                    </div>
+                    <button id="logout-btn" class="text-sm text-slate-500 hover:text-red-600 font-medium flex items-center gap-2 transition-colors p-2 rounded-md hover:bg-slate-50">
+                        <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Salir</span>
+                    </button>
+                </div>
+            </div>
         </header>
 
-        <!-- Tabs Navigation -->
-        <div class="mb-6 flex flex-wrap justify-center border-b border-gray-200">
-            <button data-tab="devoluciones" class="tab-button active text-lg py-3 px-6 font-semibold border-b-2 border-transparent hover:bg-blue-100 rounded-t-lg">
-                <i class="fas fa-undo-alt mr-2"></i>Registrar Devolución
-            </button>
-            <button data-tab="proveedores" class="tab-button text-lg py-3 px-6 font-semibold border-b-2 border-transparent hover:bg-blue-100 rounded-t-lg">
-                <i class="fas fa-truck mr-2"></i>Gestionar Proveedores
-            </button>
-        </div>
+        <main class="flex-grow container mx-auto px-4 md:px-8 py-8">
+            <!-- Tabs Navigation -->
+            <div class="mb-8">
+                <div class="flex p-1 bg-white border border-slate-200 rounded-xl inline-flex shadow-sm">
+                    <button data-tab="devoluciones" class="tab-button active flex-1 text-sm md:text-base py-2.5 px-6 font-semibold text-slate-500 rounded-lg hover:text-blue-600 focus:outline-none">
+                        <i class="fas fa-undo-alt mr-2"></i>Devoluciones
+                    </button>
+                    <button data-tab="proveedores" class="tab-button flex-1 text-sm md:text-base py-2.5 px-6 font-semibold text-slate-500 rounded-lg hover:text-blue-600 focus:outline-none">
+                        <i class="fas fa-truck mr-2"></i>Proveedores
+                    </button>
+                </div>
+            </div>
 
-        <!-- Main Content -->
-        <main>
             <!-- Devoluciones Tab -->
             <div id="devoluciones" class="tab-content">
                 <!-- Add Return Form -->
-                <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-                    <h2 class="text-2xl font-semibold mb-4 text-gray-700 border-b pb-2">Agregar Nuevo Artículo para Devolución</h2>
-                    <form id="form-devolucion" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 mb-8">
+                    <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-plus-circle text-xl"></i></div>
+                        <h2 class="text-xl font-bold text-slate-800">Registrar Nueva Incidencia</h2>
+                    </div>
+                    
+                    <form id="form-devolucion" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
                         <div>
-                            <label for="proveedor" class="block text-sm font-medium text-gray-600 mb-1">Proveedor</label>
-                            <select id="proveedor" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                            <label for="proveedor" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Proveedor</label>
+                            <select id="proveedor" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm"></select>
                         </div>
                         <div>
-                            <label for="departamento" class="block text-sm font-medium text-gray-600 mb-1">Departamento</label>
-                            <select id="departamento" name="departamento" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <label for="departamento" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Departamento</label>
+                            <select id="departamento" name="departamento" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                                 <option value="">-- Seleccione un departamento --</option>
                                 <option value="VOLKSWAGEN">VOLKSWAGEN</option>
                                 <option value="NISSAN">NISSAN</option>
@@ -120,24 +166,24 @@
                             </select>
                         </div>
                         <div>
-                            <label for="num_articulo" class="block text-sm font-medium text-gray-600 mb-1">Número de Artículo</label>
-                            <input type="text" id="num_articulo" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <label for="num_articulo" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Número de Artículo</label>
+                            <input type="text" id="num_articulo" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                         </div>
                         <div>
-                            <label for="descripcion" class="block text-sm font-medium text-gray-600 mb-1">Descripción del Artículo</label>
-                            <input type="text" id="descripcion" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <label for="descripcion" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Descripción</label>
+                            <input type="text" id="descripcion" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                         </div>
                         <div>
-                            <label for="cantidad" class="block text-sm font-medium text-gray-600 mb-1">Cantidad (piezas)</label>
-                            <input type="number" id="cantidad" required min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <label for="cantidad" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Cantidad</label>
+                            <input type="number" id="cantidad" required min="1" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                         </div>
                         <div>
-                            <label for="num_factura" class="block text-sm font-medium text-gray-600 mb-1">Número de Factura</label>
-                            <input type="text" id="num_factura" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <label for="num_factura" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Folio Factura</label>
+                            <input type="text" id="num_factura" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                         </div>
                         <div>
-                            <label for="motivo" class="block text-sm font-medium text-gray-600 mb-1">Motivo</label>
-                            <select id="motivo" name="motivo" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <label for="motivo" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Motivo</label>
+                            <select id="motivo" name="motivo" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                                 <option value="">-- Seleccione un motivo --</option>
                                 <option value="Devolución">Devolución</option>
                                 <option value="Garantía">Garantía</option>
@@ -145,28 +191,28 @@
                             </select>
                         </div>
                         <div id="otro-motivo-container" class="hidden md:col-span-2 lg:col-span-1">
-                             <label for="otro_motivo" class="block text-sm font-medium text-gray-600 mb-1">Especifique el motivo</label>
-                             <input type="text" id="otro_motivo" name="otro_motivo" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                             <label for="otro_motivo" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Especifique</label>
+                             <input type="text" id="otro_motivo" name="otro_motivo" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                         </div>
                         <div class="md:col-span-2 lg:col-span-3">
-                            <label for="observaciones" class="block text-sm font-medium text-gray-600 mb-1">Observaciones</label>
-                            <textarea id="observaciones" rows="3" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            <label for="observaciones" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Observaciones</label>
+                            <textarea id="observaciones" rows="2" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm"></textarea>
                         </div>
                         <div class="md:col-span-2 lg:col-span-3 text-right">
-                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                                <i class="fas fa-plus-circle mr-2"></i>Agregar Incidencia
+                             <button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02]">
+                                <i class="fas fa-save mr-2"></i>Registrar
                             </button>
                         </div>
                     </form>
                 </div>
 
                 <!-- Returns List -->
-                <div class="bg-white p-6 rounded-xl shadow-md">
-                     <h2 class="text-2xl font-semibold mb-4 text-gray-700">Listado de Devoluciones y Garantías</h2>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
+                     <h2 class="text-xl font-bold text-slate-800 mb-6">Listado General</h2>
                      
                      <!-- Filters and Export -->
-                    <div class="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                        <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 w-full xl:w-auto">
                              <label for="filtro-fecha-inicio" class="text-sm font-medium">Desde:</label>
                              <input type="date" id="filtro-fecha-inicio" class="p-2 border border-gray-300 rounded-md text-sm">
                              <label for="filtro-fecha-fin" class="text-sm font-medium">Hasta:</label>
@@ -183,26 +229,32 @@
                             <select id="filtro-proveedor" class="p-2 border border-gray-300 rounded-md text-sm">
                                 <option value="">Todos los Proveedores</option>
                             </select>
+                            <select id="filtro-estado" class="p-2 border border-gray-300 rounded-md text-sm">
+                                <option value="">Todos los Estados</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Aprobado">Aprobado</option>
+                                <option value="Rechazado">Rechazado</option>
+                            </select>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <p class="text-sm font-medium mr-2">Exportar:</p>
-                            <button id="export-pdf" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-3 rounded-md text-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</button>
-                            <button id="export-csv" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-md text-sm"><i class="fas fa-file-csv mr-1"></i>Excel</button>
-                            <button id="export-share" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1 px-3 rounded-md text-sm"><i class="fas fa-share-alt mr-1"></i>Compartir</button>
+                        <div class="flex items-center gap-2 w-full xl:w-auto justify-end border-t xl:border-t-0 border-slate-200 pt-3 xl:pt-0">
+                            <span class="text-xs font-bold text-slate-400 uppercase mr-2 hidden md:inline">Exportar</span>
+                            <button id="export-pdf" class="bg-white border border-red-100 text-red-600 hover:bg-red-50 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors flex items-center shadow-sm"><i class="fas fa-file-pdf mr-2"></i>PDF</button>
+                            <button id="export-csv" class="bg-white border border-green-100 text-green-600 hover:bg-green-50 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors flex items-center shadow-sm"><i class="fas fa-file-csv mr-2"></i>Excel</button>
+                            <button id="export-share" class="bg-white border border-sky-100 text-sky-600 hover:bg-sky-50 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors flex items-center shadow-sm"><i class="fas fa-share-alt mr-2"></i>Share</button>
                         </div>
                     </div>
 
                     <!-- Search Bar -->
-                     <div class="relative mb-4">
+                     <div class="relative mb-6">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                            <i class="fas fa-search text-gray-400"></i>
+                            <i class="fas fa-search text-slate-400"></i>
                         </span>
-                        <input type="text" id="barra-busqueda" placeholder="Buscar por cualquier dato..." class="w-full p-3 pl-10 border border-gray-300 rounded-full shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" id="barra-busqueda" placeholder="Buscar por folio, artículo, proveedor..." class="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none transition-all">
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-600">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Folio</th>
                                     <th scope="col" class="px-6 py-3">Proveedor</th>
@@ -218,7 +270,7 @@
                                     <th scope="col" class="px-6 py-3">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="lista-devoluciones" class="bg-white divide-y">
+                            <tbody id="lista-devoluciones" class="bg-white divide-y divide-slate-100">
                                 <!-- JS will populate this -->
                                 <tr><td colspan="12" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
                             </tbody>
@@ -231,24 +283,24 @@
             <div id="proveedores" class="tab-content hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <!-- Add Provider Form -->
-                     <div class="bg-white p-6 rounded-xl shadow-md">
-                         <h2 class="text-2xl font-semibold mb-4 text-gray-700 border-b pb-2">Registrar Nuevo Proveedor</h2>
+                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                         <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Registrar Nuevo</h2>
                          <form id="form-proveedor" class="space-y-4">
                             <div>
-                                <label for="nombre_proveedor" class="block text-sm font-medium text-gray-600 mb-1">Nombre del Proveedor</label>
-                                <input type="text" id="nombre_proveedor" required class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <label for="nombre_proveedor" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nombre Comercial</label>
+                                <input type="text" id="nombre_proveedor" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
                             </div>
                             <div class="text-right">
-                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all hover:scale-[1.02]">
                                     <i class="fas fa-save mr-2"></i>Guardar Proveedor
                                 </button>
                             </div>
                         </form>
                      </div>
                      <!-- Providers List -->
-                     <div class="bg-white p-6 rounded-xl shadow-md">
-                         <h2 class="text-2xl font-semibold mb-4 text-gray-700">Proveedores Registrados</h2>
-                         <ul id="lista-proveedores" class="space-y-2 max-h-96 overflow-y-auto">
+                     <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
+                         <h2 class="text-lg font-bold text-slate-800 mb-4">Directorio de Proveedores</h2>
+                         <ul id="lista-proveedores" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             <!-- JS will populate this -->
                             <li class="text-center p-8 text-gray-500">Cargando proveedores...</li>
                          </ul>
@@ -262,8 +314,8 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setLogLevel, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- Configuration and Initialization ---
         const firebaseConfig = {
@@ -278,6 +330,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+
+        // Habilitar persistencia de datos offline (Firestore)
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                 console.warn('La persistencia offline falló: Múltiples pestañas abiertas.');
+            } else if (err.code == 'unimplemented') {
+                 console.warn('El navegador no soporta persistencia offline.');
+            }
+        });
         
         // Definir colecciones al inicio para evitar errores de inicialización
         const providersCollection = collection(db, 'proveedores');
@@ -285,13 +346,6 @@
         
         setLogLevel('debug');
         
-        // Configurar persistencia en memoria para solicitar login al recargar
-        try {
-            await setPersistence(auth, inMemoryPersistence);
-        } catch (error) {
-            console.error("Error configurando persistencia:", error);
-        }
-
         const appId = app.options.appId; // <-- AÑADE ESTA LÍNEA
 
         let allReturns = []; // Cache for all returns to filter locally
@@ -441,13 +495,13 @@
             providers.forEach(provider => {
                 // Populate list
                 const li = document.createElement('li');
-                li.className = 'flex justify-between items-center p-2 bg-gray-50 rounded-md';
+                li.className = 'flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-xl hover:bg-white hover:shadow-md transition-all group';
                 li.dataset.id = provider.id;
                 li.innerHTML = `
-                    <span class="provider-name">${provider.nombre}</span>
-                    <div class="flex items-center gap-3">
-                        <button class="edit-provider-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
-                        <button class="delete-provider-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    <span class="provider-name font-medium text-slate-700">${provider.nombre}</span>
+                    <div class="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <button class="edit-provider-btn text-slate-400 hover:text-blue-600 p-2"><i class="fas fa-edit"></i></button>
+                        <button class="delete-provider-btn text-slate-400 hover:text-red-500 p-2"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
                 providerList.appendChild(li);
@@ -521,7 +575,7 @@
 
              returns.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50';
+                tr.className = 'hover:bg-slate-50 transition-colors';
                 
                 let statusTooltip = "";
                 if (item.status === 'Aprobado' && item.fecha_aprobacion) {
@@ -531,8 +585,8 @@
                 }
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 font-bold text-gray-900">${item.folio || 'N/A'}</td>
-                    <td class="px-6 py-4 font-medium text-gray-900">${item.proveedor}</td>
+                    <td class="px-6 py-4 font-mono font-bold text-slate-700">${item.folio || 'N/A'}</td>
+                    <td class="px-6 py-4 font-medium text-slate-900">${item.proveedor}</td>
                     <td class="px-6 py-4">${item.departamento || 'N/A'}</td>
                     <td class="px-6 py-4">${item.num_articulo}</td>
                     <td class="px-6 py-4">${item.descripcion}</td>
@@ -542,14 +596,14 @@
                     <td class="px-6 py-4">${item.motivo || ''}</td>
                     <td class="px-6 py-4">${item.observaciones || ''}</td>
                     <td class="px-6 py-4">
-                        <select data-id="${item.id}" title="${statusTooltip}" class="status-select text-xs p-1 rounded-md border-0 ${getStatusBadge(item.status)}">
+                        <select data-id="${item.id}" title="${statusTooltip}" class="status-select text-xs font-semibold py-1 px-2 rounded-full border-0 cursor-pointer focus:ring-2 focus:ring-offset-1 focus:ring-blue-400 ${getStatusBadge(item.status)}">
                             <option value="Pendiente" ${item.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
                             <option value="Aprobado" ${item.status === 'Aprobado' ? 'selected' : ''}>Aprobado</option>
                             <option value="Rechazado" ${item.status === 'Rechazado' ? 'selected' : ''}>Rechazado</option>
                         </select>
                     </td>
                     <td class="px-6 py-4">
-                        <button data-id="${item.id}" class="delete-return-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        <button data-id="${item.id}" class="delete-return-btn text-slate-300 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 returnsList.appendChild(tr);
@@ -561,6 +615,7 @@
             const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
             const deptFilter = document.getElementById('filtro-departamento').value;
             const provFilter = document.getElementById('filtro-proveedor').value;
+            const statusFilter = document.getElementById('filtro-estado').value;
             let filtered = allReturns;
 
             if (searchTerm) {
@@ -576,6 +631,9 @@
             if (provFilter) {
                 filtered = filtered.filter(item => item.proveedor === provFilter);
             }
+            if (statusFilter) {
+                filtered = filtered.filter(item => item.status === statusFilter);
+            }
             renderReturns(filtered);
         }
 
@@ -586,6 +644,7 @@
              const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
              const deptFilter = document.getElementById('filtro-departamento').value;
              const provFilter = document.getElementById('filtro-proveedor').value;
+             const statusFilter = document.getElementById('filtro-estado').value;
              let data = allReturns;
 
              if (startDate) {
@@ -609,6 +668,9 @@
              }
              if (provFilter) {
                 data = data.filter(item => item.proveedor === provFilter);
+             }
+             if (statusFilter) {
+                data = data.filter(item => item.status === statusFilter);
              }
              return data;
         }
@@ -721,6 +783,7 @@
             document.getElementById('filtro-fecha-fin').addEventListener('change', () => {});
             document.getElementById('filtro-departamento').addEventListener('change', filterAndRender);
             document.getElementById('filtro-proveedor').addEventListener('change', filterAndRender);
+            document.getElementById('filtro-estado').addEventListener('change', filterAndRender);
 
             // Event delegation for dynamic elements
             document.body.addEventListener('click', async (e) => {
@@ -849,6 +912,17 @@
                  }
              });
 
+             // --- PWA Service Worker Registration ---
+             if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registrado con éxito: ', registration.scope);
+                        }, err => {
+                            console.log('Fallo en el registro del ServiceWorker: ', err);
+                        });
+                });
+             }
     </script>
 
 </body>

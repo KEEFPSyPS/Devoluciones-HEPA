@@ -1,0 +1,24 @@
+{
+  "name": "Devoluciones y Garantías",
+  "short_name": "Devoluciones y Garantías",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#ffffff",
+  "description": "Sistema de Gestión de Devoluciones y Garantías para Refaccionarias HEPA",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./img/logoAppHepa.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./img/logoAppHepa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
