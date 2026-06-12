@@ -160,6 +160,9 @@
                     <button data-tab="proveedores" class="tab-button flex-1 text-sm md:text-base py-2.5 px-6 font-semibold text-slate-500 dark:text-slate-400 rounded-lg hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none">
                         <i class="fas fa-truck mr-2"></i>Proveedores
                     </button>
+                    <button data-tab="empleados" class="tab-button flex-1 text-sm md:text-base py-2.5 px-6 font-semibold text-slate-500 dark:text-slate-400 rounded-lg hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none">
+                        <i class="fas fa-users mr-2"></i>Empleados
+                    </button>
                 </div>
             </div>
 
@@ -173,6 +176,10 @@
                     </div>
                     
                     <form id="form-devolucion" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
+                        <div>
+                            <label for="quien_reporta" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Reporta</label>
+                            <select id="quien_reporta" required class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"></select>
+                        </div>
                         <div>
                             <label for="proveedor" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Proveedor</label>
                             <select id="proveedor" required class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"></select>
@@ -289,13 +296,14 @@
                                     <th scope="col" class="px-6 py-3">Fecha</th>
                                     <th scope="col" class="px-6 py-3">Motivo</th>
                                     <th scope="col" class="px-6 py-3">Observaciones</th>
+                                    <th scope="col" class="px-6 py-3">Reporta</th>
                                     <th scope="col" class="px-6 py-3">Estado</th>
                                     <th scope="col" class="px-6 py-3">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="lista-devoluciones" class="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
                                 <!-- JS will populate this -->
-                                <tr><td colspan="12" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
+                                <tr><td colspan="13" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -326,6 +334,35 @@
                          <ul id="lista-proveedores" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             <!-- JS will populate this -->
                             <li class="text-center p-8 text-gray-500">Cargando proveedores...</li>
+                         </ul>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Empleados Tab -->
+            <div id="empleados" class="tab-content hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <!-- Add Staff Form -->
+                     <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 h-fit transition-colors duration-300">
+                         <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">Registrar Empleado</h2>
+                         <form id="form-empleado" class="space-y-4">
+                            <div>
+                                <label for="nombre_empleado" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre del Empleado</label>
+                                <input type="text" id="nombre_empleado" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 dark:text-white border border-slate-200 dark:border-slate-600 rounded-xl focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
+                            </div>
+                            <div class="text-right">
+                                <button type="submit" class="w-full bg-slate-800 dark:bg-slate-600 hover:bg-slate-900 dark:hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all hover:scale-[1.02]">
+                                    <i class="fas fa-save mr-2"></i>Guardar Empleado
+                                </button>
+                            </div>
+                        </form>
+                     </div>
+                     <!-- Staff List -->
+                     <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-300">
+                         <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Directorio de Empleados</h2>
+                         <ul id="lista-empleados" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                            <!-- JS will populate this -->
+                            <li class="text-center p-8 text-gray-500">Cargando empleados...</li>
                          </ul>
                      </div>
                  </div>
@@ -366,6 +403,7 @@
         // Definir colecciones al inicio para evitar errores de inicialización
         const providersCollection = collection(db, 'proveedores');
         const returnsCollection = collection(db, 'devoluciones');
+        const staffCollection = collection(db, 'empleados');
         
         setLogLevel('debug');
         
@@ -373,6 +411,7 @@
 
         let allReturns = []; // Cache for all returns to filter locally
         let allProviders = []; // Cache for all providers
+        let allStaff = []; // Cache for all staff
 
         // --- Authentication ---
         const loginOverlay = document.getElementById('login-overlay');
@@ -383,10 +422,11 @@
         // Variables para controlar las suscripciones
         let unsubscribeProviders = null;
         let unsubscribeReturns = null;
+        let unsubscribeStaff = null;
 
         function subscribeToData() {
             // Evitar doble suscripción
-            if (unsubscribeProviders || unsubscribeReturns) return;
+            if (unsubscribeProviders || unsubscribeReturns || unsubscribeStaff) return;
 
             unsubscribeProviders = onSnapshot(providersCollection, (snapshot) => {
                 console.log("Proveedores recibidos:", snapshot.size);
@@ -395,6 +435,15 @@
                 renderProviders(providers);
             }, (error) => {
                 console.error("Error cargando proveedores:", error);
+            });
+            
+            unsubscribeStaff = onSnapshot(staffCollection, (snapshot) => {
+                console.log("Empleados recibidos:", snapshot.size);
+                const staffs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allStaff = staffs;
+                renderStaff(staffs);
+            }, (error) => {
+                console.error("Error cargando empleados:", error);
             });
             
             unsubscribeReturns = onSnapshot(returnsCollection, (snapshot) => {
@@ -425,11 +474,14 @@
         function unsubscribeFromData() {
             if (unsubscribeProviders) unsubscribeProviders();
             if (unsubscribeReturns) unsubscribeReturns();
+            if (unsubscribeStaff) unsubscribeStaff();
             unsubscribeProviders = null;
             unsubscribeReturns = null;
+            unsubscribeStaff = null;
             // Limpiar tablas visualmente
             document.getElementById('lista-proveedores').innerHTML = '';
             document.getElementById('lista-devoluciones').innerHTML = '';
+            document.getElementById('lista-empleados').innerHTML = '';
         }
 
         onAuthStateChanged(auth, (user) => {
@@ -559,6 +611,56 @@
             if (currentFilter) filterProviderSelect.value = currentFilter;
         }
         
+        // --- Staff / Empleados Management ---
+        const formEmpleado = document.getElementById('form-empleado');
+        const nombreEmpleadoInput = document.getElementById('nombre_empleado');
+
+        formEmpleado.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = nombreEmpleadoInput.value.trim();
+            if (nombre) {
+                try {
+                    await addDoc(staffCollection, { nombre });
+                    showNotification("Empleado guardado con éxito.");
+                    formEmpleado.reset();
+                } catch (error) {
+                    console.error("Error adding staff: ", error);
+                    showNotification("Error al guardar el empleado.", "error");
+                }
+            }
+        });
+
+        function renderStaff(staffs) {
+            const staffList = document.getElementById('lista-empleados');
+            const selectReporta = document.getElementById('quien_reporta');
+            
+            staffList.innerHTML = '';
+            selectReporta.innerHTML = '<option value="">-- Seleccione un empleado --</option>';
+            
+            if (staffs.length === 0) {
+                 staffList.innerHTML = '<li class="text-center p-4 text-gray-500">No hay empleados registrados.</li>';
+            }
+
+            staffs.forEach(staff => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:shadow-md transition-all group';
+                li.dataset.id = staff.id;
+                li.innerHTML = `
+                    <span class="staff-name font-medium text-slate-700 dark:text-slate-200">${staff.nombre}</span>
+                    <div class="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <button class="edit-staff-btn text-slate-400 hover:text-blue-600 p-2"><i class="fas fa-edit"></i></button>
+                        <button class="delete-staff-btn text-slate-400 hover:text-red-500 p-2"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                staffList.appendChild(li);
+
+                const option = document.createElement('option');
+                option.value = staff.nombre;
+                option.textContent = staff.nombre;
+                selectReporta.appendChild(option);
+            });
+        }
+
         // --- Returns Management ---
         const formDevolucion = document.getElementById('form-devolucion');
 
@@ -580,6 +682,7 @@
             const returnData = {
                 folio: Math.floor(1000 + Math.random() * 9000).toString(), // Genera folio de 4 dígitos
                 proveedor: document.getElementById('proveedor').value,
+                quien_reporta: document.getElementById('quien_reporta').value,
                 departamento: document.getElementById('departamento').value,
                 num_articulo: document.getElementById('num_articulo').value,
                 descripcion: document.getElementById('descripcion').value,
@@ -607,7 +710,7 @@
              returnsList.innerHTML = '';
              
              if (returns.length === 0) {
-                 returnsList.innerHTML = '<tr><td colspan="12" class="text-center p-8 text-gray-500">No se encontraron registros.</td></tr>';
+                 returnsList.innerHTML = '<tr><td colspan="13" class="text-center p-8 text-gray-500">No se encontraron registros.</td></tr>';
                  return;
              }
 
@@ -638,6 +741,7 @@
                     <td class="px-6 py-4">${new Date(item.fecha).toLocaleDateString()}</td>
                     <td class="px-6 py-4">${item.motivo || ''}</td>
                     <td class="px-6 py-4">${item.observaciones || ''}</td>
+                    <td class="px-6 py-4">${item.quien_reporta || 'N/A'}</td>
                     <td class="px-6 py-4">
                         <select data-id="${item.id}" title="${statusTooltip}" class="status-select text-xs font-semibold py-1 px-2 rounded-full border-0 cursor-pointer focus:ring-2 focus:ring-offset-1 focus:ring-blue-400 dark:bg-slate-800 ${getStatusBadge(item.status)}">
                             <option value="Pendiente" ${item.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
@@ -729,7 +833,7 @@
             const doc = new jsPDF();
             
             doc.autoTable({
-                head: [['Folio', 'Proveedor', 'Departamento', 'Articulo', 'Descripcion', 'Pzs', 'Factura', 'Fecha', 'Motivo', 'Observaciones', 'Estado']],
+                head: [['Folio', 'Proveedor', 'Departamento', 'Articulo', 'Descripcion', 'Pzs', 'Factura', 'Fecha', 'Motivo', 'Observaciones', 'Reporta', 'Estado']],
                 body: data.map(item => [
                     item.folio || 'N/A',
                     item.proveedor,
@@ -741,6 +845,7 @@
                     new Date(item.fecha).toLocaleDateString(),
                     item.motivo,
                     item.observaciones || '',
+                    item.quien_reporta || 'N/A',
                     item.status
                 ]),
             });
@@ -753,9 +858,9 @@
                 showNotification("No hay datos para exportar en el rango seleccionado.", "info");
                 return;
             }
-            let csvContent = "data:text/csv;charset=utf-8,Folio,Proveedor,Departamento,Numero Articulo,Descripcion,Cantidad,Numero Factura,Fecha,Motivo,Observaciones,Estado\n";
+            let csvContent = "data:text/csv;charset=utf-8,Folio,Proveedor,Departamento,Numero Articulo,Descripcion,Cantidad,Numero Factura,Fecha,Motivo,Observaciones,Reporta,Estado\n";
             data.forEach(item => {
-                let row = [item.folio || 'N/A', item.proveedor, item.departamento || 'N/A', item.num_articulo, `"${item.descripcion}"`, item.cantidad, item.num_factura, new Date(item.fecha).toLocaleDateString(), `"${item.motivo || ''}"`, `"${item.observaciones}"`, item.status].join(",");
+                let row = [item.folio || 'N/A', item.proveedor, item.departamento || 'N/A', item.num_articulo, `"${item.descripcion}"`, item.cantidad, item.num_factura, new Date(item.fecha).toLocaleDateString(), `"${item.motivo || ''}"`, `"${item.observaciones}"`, `"${item.quien_reporta || 'N/A'}"`, item.status].join(",");
                 csvContent += row + "\r\n";
             });
             
@@ -777,7 +882,7 @@
             
             let shareText = "Resumen de Devoluciones:\n\n";
             data.forEach(item => {
-                shareText += `Folio: ${item.folio || 'N/A'}\nProveedor: ${item.proveedor}\nDepartamento: ${item.departamento || 'N/A'}\nArtículo: ${item.descripcion}\nCantidad: ${item.cantidad}\nMotivo: ${item.motivo || 'N/A'}\nObservaciones: ${item.observaciones || 'N/A'}\nEstado: ${item.status}\n\n`;
+                shareText += `Folio: ${item.folio || 'N/A'}\nProveedor: ${item.proveedor}\nReporta: ${item.quien_reporta || 'N/A'}\nDepartamento: ${item.departamento || 'N/A'}\nArtículo: ${item.descripcion}\nCantidad: ${item.cantidad}\nMotivo: ${item.motivo || 'N/A'}\nObservaciones: ${item.observaciones || 'N/A'}\nEstado: ${item.status}\n\n`;
             });
             
             if (navigator.share) {
@@ -849,6 +954,65 @@
                 const editReturnBtn = e.target.closest('.edit-return-btn');
                 const saveReturnBtn = e.target.closest('.save-return-btn');
                 const cancelEditReturnBtn = e.target.closest('.cancel-edit-return-btn');
+                const deleteStaffBtn = e.target.closest('.delete-staff-btn');
+                const editStaffBtn = e.target.closest('.edit-staff-btn');
+                const saveStaffBtn = e.target.closest('.save-staff-btn');
+                const cancelEditStaffBtn = e.target.closest('.cancel-edit-staff-btn');
+
+                // Delete Staff
+                if (deleteStaffBtn) {
+                    const id = deleteStaffBtn.closest('li').dataset.id;
+                    try {
+                        await deleteDoc(doc(db, 'empleados', id));
+                        showNotification("Empleado eliminado.");
+                    } catch (error) {
+                        console.error("Error deleting staff:", error);
+                        showNotification("Error al eliminar empleado.", "error");
+                    }
+                }
+
+                // Edit Staff - Show input
+                if (editStaffBtn) {
+                    const li = editStaffBtn.closest('li');
+                    const staffNameSpan = li.querySelector('.staff-name');
+                    const currentName = staffNameSpan.textContent;
+                    
+                    li.innerHTML = `
+                        <input type="text" value="${currentName}" class="edit-staff-input w-full p-1 border border-blue-300 dark:border-blue-600 dark:bg-slate-800 dark:text-white rounded-md">
+                        <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+                            <button class="save-staff-btn text-green-500 hover:text-green-700"><i class="fas fa-check"></i></button>
+                            <button class="cancel-edit-staff-btn text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                    li.querySelector('.edit-staff-input').focus();
+                }
+
+                // Save Staff Edit
+                if (saveStaffBtn) {
+                    const li = saveStaffBtn.closest('li');
+                    const input = li.querySelector('.edit-staff-input');
+                    const newName = input.value.trim();
+                    const id = li.dataset.id;
+
+                    if (newName && id) {
+                        try {
+                            const staffDocRef = doc(db, 'empleados', id);
+                            await updateDoc(staffDocRef, { nombre: newName });
+                            showNotification("Empleado actualizado.");
+                        } catch(error) {
+                            console.error("Error updating staff:", error);
+                            showNotification("Error al actualizar el empleado.", "error");
+                        }
+                    } else {
+                        showNotification("El nombre no puede estar vacío.", "error");
+                        renderStaff(allStaff); // Re-render to cancel if name is empty
+                    }
+                }
+                
+                // Cancel Staff Edit
+                if (cancelEditStaffBtn) {
+                    renderStaff(allStaff); // Re-render from cache to cancel the edit
+                }
 
                 // Delete provider
                 if (deleteProviderBtn) {
@@ -925,6 +1089,7 @@
                     
                     const provOptions = allProviders.map(p => `<option value="${p.nombre}" ${p.nombre === item.proveedor ? 'selected' : ''}>${p.nombre}</option>`).join('');
                     const deptOptions = ['VOLKSWAGEN', 'NISSAN', 'CHEVROLET', 'TOYOTA', 'RENAULT'].map(d => `<option value="${d}" ${d === item.departamento ? 'selected' : ''}>${d}</option>`).join('');
+                    const repOptions = allStaff.map(s => `<option value="${s.nombre}" ${s.nombre === item.quien_reporta ? 'selected' : ''}>${s.nombre}</option>`).join('');
                     const safeVal = (val) => (val || '').toString().replace(/"/g, '&quot;'); // Prevenir inyecciones HTML en campos de texto
 
                     tr.innerHTML = `
@@ -938,6 +1103,7 @@
                         <td class="px-6 py-4">${new Date(item.fecha).toLocaleDateString()}</td>
                         <td class="px-6 py-4"><input type="text" class="edit-mot border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.motivo)}"></td>
                         <td class="px-6 py-4"><input type="text" class="edit-obs border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.observaciones)}"></td>
+                        <td class="px-6 py-4"><select class="edit-rep border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500">${repOptions}</select></td>
                         <td class="px-6 py-4">${item.status}</td>
                         <td class="px-6 py-4 flex gap-2">
                             <button data-id="${item.id}" class="save-return-btn text-green-500 hover:text-green-700 transition-colors" title="Guardar"><i class="fas fa-check"></i></button>
@@ -955,6 +1121,7 @@
                             proveedor: tr.querySelector('.edit-prov').value,
                             departamento: tr.querySelector('.edit-dept').value,
                             num_articulo: tr.querySelector('.edit-art').value,
+                            quien_reporta: tr.querySelector('.edit-rep').value,
                             descripcion: tr.querySelector('.edit-desc').value,
                             cantidad: parseInt(tr.querySelector('.edit-cant').value, 10),
                             num_factura: tr.querySelector('.edit-fac').value,
