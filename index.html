@@ -399,6 +399,21 @@
             
             unsubscribeReturns = onSnapshot(returnsCollection, (snapshot) => {
                 console.log("Devoluciones recibidas:", snapshot.size);
+                
+                const sixMonthsAgo = new Date();
+                sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+                snapshot.docs.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status === 'Aprobado') {
+                        const approvalDate = data.fecha_aprobacion ? new Date(data.fecha_aprobacion) : new Date(data.fecha);
+                        if (approvalDate < sixMonthsAgo) {
+                            console.log(`Auto eliminando registro antiguo: ${docSnap.id}`);
+                            deleteDoc(doc(db, 'devoluciones', docSnap.id)).catch(console.error);
+                        }
+                    }
+                });
+
                 allReturns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allReturns.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                 filterAndRender();
@@ -607,6 +622,11 @@
                     statusTooltip = `Rechazado por: ${item.persona_rechazo || 'N/A'}\nMotivo: ${item.motivo_rechazo || 'N/A'}`;
                 }
 
+                if (item.fecha_modificacion) {
+                    const modText = `Última modificación: ${new Date(item.fecha_modificacion).toLocaleString()}`;
+                    statusTooltip = statusTooltip ? statusTooltip + '\n' + modText : modText;
+                }
+
                 tr.innerHTML = `
                     <td class="px-6 py-4 font-mono font-bold text-slate-700 dark:text-slate-200">${item.folio || 'N/A'}</td>
                     <td class="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">${item.proveedor}</td>
@@ -625,8 +645,9 @@
                             <option value="Rechazado" ${item.status === 'Rechazado' ? 'selected' : ''}>Rechazado</option>
                         </select>
                     </td>
-                    <td class="px-6 py-4">
-                        <button data-id="${item.id}" class="delete-return-btn text-slate-300 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+                    <td class="px-6 py-4 flex gap-2">
+                        <button data-id="${item.id}" class="edit-return-btn text-blue-400 hover:text-blue-600 transition-colors" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button data-id="${item.id}" class="delete-return-btn text-slate-300 hover:text-red-500 transition-colors" title="Eliminar"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
                 returnsList.appendChild(tr);
@@ -825,6 +846,9 @@
                 const editProviderBtn = e.target.closest('.edit-provider-btn');
                 const saveProviderBtn = e.target.closest('.save-provider-btn');
                 const cancelEditBtn = e.target.closest('.cancel-edit-provider-btn');
+                const editReturnBtn = e.target.closest('.edit-return-btn');
+                const saveReturnBtn = e.target.closest('.save-return-btn');
+                const cancelEditReturnBtn = e.target.closest('.cancel-edit-return-btn');
 
                 // Delete provider
                 if (deleteProviderBtn) {
@@ -891,6 +915,63 @@
                 // Cancel Provider Edit
                 if (cancelEditBtn) {
                     renderProviders(allProviders); // Re-render from cache to cancel the edit
+                }
+
+                // Edit Return
+                if (editReturnBtn) {
+                    const tr = editReturnBtn.closest('tr');
+                    const id = editReturnBtn.dataset.id;
+                    const item = allReturns.find(i => i.id === id);
+                    
+                    const provOptions = allProviders.map(p => `<option value="${p.nombre}" ${p.nombre === item.proveedor ? 'selected' : ''}>${p.nombre}</option>`).join('');
+                    const deptOptions = ['VOLKSWAGEN', 'NISSAN', 'CHEVROLET', 'TOYOTA', 'RENAULT'].map(d => `<option value="${d}" ${d === item.departamento ? 'selected' : ''}>${d}</option>`).join('');
+                    const safeVal = (val) => (val || '').toString().replace(/"/g, '&quot;'); // Prevenir inyecciones HTML en campos de texto
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-mono font-bold text-slate-700 dark:text-slate-200">${item.folio || 'N/A'}</td>
+                        <td class="px-6 py-4"><select class="edit-prov border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500">${provOptions}</select></td>
+                        <td class="px-6 py-4"><select class="edit-dept border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500">${deptOptions}</select></td>
+                        <td class="px-6 py-4"><input type="text" class="edit-art border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.num_articulo)}"></td>
+                        <td class="px-6 py-4"><input type="text" class="edit-desc border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.descripcion)}"></td>
+                        <td class="px-6 py-4"><input type="number" class="edit-cant border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${item.cantidad}" min="1"></td>
+                        <td class="px-6 py-4"><input type="text" class="edit-fac border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.num_factura)}"></td>
+                        <td class="px-6 py-4">${new Date(item.fecha).toLocaleDateString()}</td>
+                        <td class="px-6 py-4"><input type="text" class="edit-mot border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.motivo)}"></td>
+                        <td class="px-6 py-4"><input type="text" class="edit-obs border border-slate-300 dark:border-slate-600 rounded p-1 w-full text-xs dark:bg-slate-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" value="${safeVal(item.observaciones)}"></td>
+                        <td class="px-6 py-4">${item.status}</td>
+                        <td class="px-6 py-4 flex gap-2">
+                            <button data-id="${item.id}" class="save-return-btn text-green-500 hover:text-green-700 transition-colors" title="Guardar"><i class="fas fa-check"></i></button>
+                            <button class="cancel-edit-return-btn text-red-500 hover:text-red-700 transition-colors" title="Cancelar"><i class="fas fa-times"></i></button>
+                        </td>
+                    `;
+                }
+
+                // Save Return Edit
+                if (saveReturnBtn) {
+                    const tr = saveReturnBtn.closest('tr');
+                    const id = saveReturnBtn.dataset.id;
+                    try {
+                        await updateDoc(doc(db, 'devoluciones', id), {
+                            proveedor: tr.querySelector('.edit-prov').value,
+                            departamento: tr.querySelector('.edit-dept').value,
+                            num_articulo: tr.querySelector('.edit-art').value,
+                            descripcion: tr.querySelector('.edit-desc').value,
+                            cantidad: parseInt(tr.querySelector('.edit-cant').value, 10),
+                            num_factura: tr.querySelector('.edit-fac').value,
+                            motivo: tr.querySelector('.edit-mot').value,
+                            observaciones: tr.querySelector('.edit-obs').value,
+                            fecha_modificacion: new Date().toISOString()
+                        });
+                        showNotification('Registro actualizado correctamente.');
+                    } catch (err) {
+                        console.error("Error updating return:", err);
+                        showNotification('Error al actualizar el registro.', 'error');
+                    }
+                }
+
+                // Cancel Return Edit
+                if (cancelEditReturnBtn) {
+                    filterAndRender(); // Re-renderiza la tabla para cancelar
                 }
             });
             
