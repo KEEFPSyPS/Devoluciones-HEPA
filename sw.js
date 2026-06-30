@@ -34,19 +34,43 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Estrategia de interceptación de peticiones (Network First para datos, Cache First para estáticos)
+// Estrategia de interceptación de peticiones
 self.addEventListener('fetch', (event) => {
-    // Ignorar peticiones de Firebase/Google APIs para no interferir con la base de datos en tiempo real
-    if (event.request.url.includes('firestore.googleapis.com') || 
-        event.request.url.includes('firebase') ||
-        event.request.url.includes('googleapis.com')) {
+    const url = event.request.url;
+    
+    // NO interceptar NINGUNA petición a Firebase o Google APIs
+    // Esto incluye WebChannel/Streaming que Firestore usa en tiempo real
+    if (url.includes('firebase') || 
+        url.includes('googleapis.com') || 
+        url.includes('gstatic.com') ||
+        url.includes('firebaseapp.com')) {
         return;
     }
 
-    event.respondWith(
-        fetch(event.request)
-            .catch(() => {
-                return caches.match(event.request);
-            })
-    );
+    // Solo interceptar assets estáticos conocidos (Cache First)
+    if (url.includes('cdn.tailwindcss.com') || 
+        url.includes('cdnjs.cloudflare.com') ||
+        url.includes('fonts.googleapis.com')) {
+        event.respondWith(
+            caches.match(event.request)
+                .then((cachedResponse) => {
+                    return cachedResponse || fetch(event.request);
+                })
+        );
+        return;
+    }
+
+    // Para assets locales del proyecto (img, etc.)
+    if (url.includes('/img/')) {
+        event.respondWith(
+            caches.match(event.request)
+                .then((cachedResponse) => {
+                    return cachedResponse || fetch(event.request);
+                })
+        );
+        return;
+    }
+
+    // Para todo lo demás (incluyendo el HTML principal), dejar pasar sin interceptar
+    return;
 });

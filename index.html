@@ -390,7 +390,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setLogLevel, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, collection, addDoc, doc, deleteDoc, updateDoc, setLogLevel, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         // --- Configuration and Initialization ---
@@ -404,30 +404,28 @@
         };
         
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Forzar uso de REST en lugar de WebChannel para evitar ERR_BLOCKED_BY_CLIENT
+        const db = initializeFirestore(app, {
+            experimentalForceLongPolling: true,
+            experimentalAutoDetectLongPolling: false
+        });
         const auth = getAuth(app);
 
-        // Habilitar persistencia de datos offline (Firestore)
-        enableIndexedDbPersistence(db).catch((err) => {
-            if (err.code == 'failed-precondition') {
-                 console.warn('La persistencia offline falló: Múltiples pestañas abiertas.');
-            } else if (err.code == 'unimplemented') {
-                 console.warn('El navegador no soporta persistencia offline.');
-            }
-        });
+        // NOTA: Se usa polling REST en lugar de WebChannel/onSnapshot
+        // porque extensiones del navegador bloquean ERR_BLOCKED_BY_CLIENT en WebChannel.
+        // Los datos se refrescan cada 3 segundos via getDocs() (REST).
         
-        // Definir colecciones al inicio para evitar errores de inicialización
+        // Definir colecciones al inicio
         const providersCollection = collection(db, 'proveedores');
         const returnsCollection = collection(db, 'devoluciones');
         const staffCollection = collection(db, 'empleados');
         
-        setLogLevel('debug');
+        setLogLevel('error');
         
-        const appId = app.options.appId; // <-- AÑADE ESTA LÍNEA
-
-        let allReturns = []; // Cache for all returns to filter locally
-        let allProviders = []; // Cache for all providers
-        let allStaff = []; // Cache for all staff
+        let allReturns = [];
+        let allProviders = [];
+        let allStaff = [];
+        let pollingInterval = null;
 
         // --- Authentication ---
         const loginOverlay = document.getElementById('login-overlay');
@@ -435,66 +433,61 @@
         const loginForm = document.getElementById('login-form');
         const logoutBtn = document.getElementById('logout-btn');
 
-        // Variables para controlar las suscripciones
-        let unsubscribeProviders = null;
-        let unsubscribeReturns = null;
-        let unsubscribeStaff = null;
-
-        function subscribeToData() {
-            // Evitar doble suscripción
-            if (unsubscribeProviders || unsubscribeReturns || unsubscribeStaff) return;
-
-            unsubscribeProviders = onSnapshot(providersCollection, (snapshot) => {
-                console.log("Proveedores recibidos:", snapshot.size);
-                const providers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                allProviders = providers;
-                renderProviders(providers);
-            }, (error) => {
-                console.error("Error cargando proveedores:", error);
-            });
-            
-            unsubscribeStaff = onSnapshot(staffCollection, (snapshot) => {
-                console.log("Empleados recibidos:", snapshot.size);
-                const staffs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                allStaff = staffs;
-                renderStaff(staffs);
-            }, (error) => {
-                console.error("Error cargando empleados:", error);
-            });
-            
-            unsubscribeReturns = onSnapshot(returnsCollection, (snapshot) => {
-                console.log("Devoluciones recibidas:", snapshot.size);
+        // --- Polling REST (reemplaza onSnapshot) ---
+        async function fetchAllData() {
+            try {
+                const [provSnap, retSnap, staffSnap] = await Promise.all([
+                    getDocs(query(providersCollection, orderBy('nombre'))),
+                    getDocs(query(returnsCollection, orderBy('fecha', 'desc'))),
+                    getDocs(query(staffCollection, orderBy('nombre')))
+                ]);
                 
+                allProviders = provSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderProviders(allProviders);
+                
+                allStaff = staffSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStaff(allStaff);
+                
+                // Auto-eliminar registros antiguos aprobados (>6 meses)
                 const sixMonthsAgo = new Date();
                 sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-                snapshot.docs.forEach(docSnap => {
+                
+                const deletePromises = [];
+                retSnap.docs.forEach(docSnap => {
                     const data = docSnap.data();
                     if (data.status === 'Aprobado') {
                         const approvalDate = data.fecha_aprobacion ? new Date(data.fecha_aprobacion) : new Date(data.fecha);
                         if (approvalDate < sixMonthsAgo) {
-                            console.log(`Auto eliminando registro antiguo: ${docSnap.id}`);
-                            deleteDoc(doc(db, 'devoluciones', docSnap.id)).catch(console.error);
+                            deletePromises.push(deleteDoc(doc(db, 'devoluciones', docSnap.id)).catch(() => {}));
                         }
                     }
                 });
-
-                allReturns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                await Promise.all(deletePromises);
+                
+                allReturns = retSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 allReturns.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                 filterAndRender();
-            }, (error) => {
-                console.error("Error cargando devoluciones:", error);
-            });
+            } catch (error) {
+                console.error("Error en polling de datos:", error);
+            }
         }
 
-        function unsubscribeFromData() {
-            if (unsubscribeProviders) unsubscribeProviders();
-            if (unsubscribeReturns) unsubscribeReturns();
-            if (unsubscribeStaff) unsubscribeStaff();
-            unsubscribeProviders = null;
-            unsubscribeReturns = null;
-            unsubscribeStaff = null;
-            // Limpiar tablas visualmente
+        // Forzar actualización inmediata después de cualquier acción
+        function refreshNow() {
+            fetchAllData();
+        }
+
+        function startPolling() {
+            if (pollingInterval) return;
+            fetchAllData(); // Carga inicial
+            pollingInterval = setInterval(fetchAllData, 3000); // Refrescar cada 3s
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
             document.getElementById('lista-proveedores').innerHTML = '';
             document.getElementById('lista-devoluciones').innerHTML = '';
             document.getElementById('lista-empleados').innerHTML = '';
@@ -505,11 +498,11 @@
                 loginOverlay.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 document.getElementById('user-display').textContent = user.email;
-                subscribeToData(); // <--- Cargar datos SOLO al entrar
+                startPolling();
             } else {
                 loginOverlay.classList.remove('hidden');
                 appContent.classList.add('hidden');
-                unsubscribeFromData(); // <--- Dejar de escuchar al salir
+                stopPolling();
             }
         });
 
@@ -577,6 +570,7 @@
                     await addDoc(providersCollection, { nombre: nombreProveedor });
                     showNotification("Proveedor guardado con éxito.");
                     formProveedor.reset();
+                    refreshNow();
                 } catch (error) {
                     console.error("Error adding provider: ", error);
                     showNotification("Error al guardar el proveedor.", "error");
@@ -639,6 +633,7 @@
                     await addDoc(staffCollection, { nombre });
                     showNotification("Empleado guardado con éxito.");
                     formEmpleado.reset();
+                    refreshNow();
                 } catch (error) {
                     console.error("Error adding staff: ", error);
                     showNotification("Error al guardar el empleado.", "error");
@@ -715,6 +710,7 @@
                 showNotification("Devolución registrada con éxito.");
                 formDevolucion.reset();
                 document.getElementById('otro-motivo-container').classList.add('hidden');
+                refreshNow();
             } catch (error) {
                 console.error("Error adding return: ", error);
                 showNotification("Error al registrar la devolución.", "error");
@@ -981,6 +977,7 @@
                     try {
                         await deleteDoc(doc(db, 'empleados', id));
                         showNotification("Empleado eliminado.");
+                        refreshNow();
                     } catch (error) {
                         console.error("Error deleting staff:", error);
                         showNotification("Error al eliminar empleado.", "error");
@@ -1015,13 +1012,14 @@
                             const staffDocRef = doc(db, 'empleados', id);
                             await updateDoc(staffDocRef, { nombre: newName });
                             showNotification("Empleado actualizado.");
+                            refreshNow();
                         } catch(error) {
                             console.error("Error updating staff:", error);
                             showNotification("Error al actualizar el empleado.", "error");
                         }
                     } else {
                         showNotification("El nombre no puede estar vacío.", "error");
-                        renderStaff(allStaff); // Re-render to cancel if name is empty
+                        renderStaff(allStaff);
                     }
                 }
                 
@@ -1034,8 +1032,9 @@
                 if (deleteProviderBtn) {
                     const id = deleteProviderBtn.closest('li').dataset.id;
                     try {
-                        await deleteDoc(doc(db, 'proveedores', id)); // <-- CAMBIA ESTA LÍNEA
+                        await deleteDoc(doc(db, 'proveedores', id));
                         showNotification("Proveedor eliminado.");
+                        refreshNow();
                     } catch (error) {
                         console.error("Error deleting provider:", error);
                         showNotification("Error al eliminar proveedor.", "error");
@@ -1046,8 +1045,9 @@
                 if (deleteReturnBtn) {
                     const id = deleteReturnBtn.closest('tr').querySelector('[data-id]').dataset.id;
                      try {
-                        await deleteDoc(doc(db, 'devoluciones', id)); // <-- CAMBIA ESTA LÍNEA
+                        await deleteDoc(doc(db, 'devoluciones', id));
                         showNotification("Registro de devolución eliminado.");
+                        refreshNow();
                     } catch (error) {
                         console.error("Error deleting return:", error);
                         showNotification("Error al eliminar el registro.", "error");
@@ -1079,16 +1079,17 @@
 
                     if (newName && id) {
                         try {
-                            const providerDocRef = doc(db, 'proveedores', id); // <-- CAMBIA ESTA LÍNEA
+                            const providerDocRef = doc(db, 'proveedores', id);
                             await updateDoc(providerDocRef, { nombre: newName });
                             showNotification("Proveedor actualizado.");
+                            refreshNow();
                         } catch(error) {
                             console.error("Error updating provider:", error);
                             showNotification("Error al actualizar el proveedor.", "error");
                         }
                     } else {
                         showNotification("El nombre no puede estar vacío.", "error");
-                        renderProviders(allProviders); // Re-render to cancel if name is empty
+                        renderProviders(allProviders);
                     }
                 }
                 
@@ -1146,6 +1147,7 @@
                             fecha_modificacion: new Date().toISOString()
                         });
                         showNotification('Registro actualizado correctamente.');
+                        refreshNow();
                     } catch (err) {
                         console.error("Error updating return:", err);
                         showNotification('Error al actualizar el registro.', 'error');
@@ -1169,7 +1171,10 @@
                      const currentItem = allReturns.find(i => i.id === id);
                      const oldStatus = currentItem ? currentItem.status : 'Pendiente';
                      
-                     let updateData = { status: newStatus };
+                     let updateData = { 
+                         status: newStatus,
+                         fecha_modificacion: new Date().toISOString()
+                     };
                      
                      if (newStatus === 'Aprobado') {
                          const persona = prompt("Ingrese el nombre de la persona que recogió la garantía/devolución:");
@@ -1198,9 +1203,10 @@
                      }
 
                      try {
-                         const returnDocRef = doc(db, 'devoluciones', id); // <-- CAMBIA ESTA LÍNEA
+                         const returnDocRef = doc(db, 'devoluciones', id);
                          await updateDoc(returnDocRef, updateData);
                          showNotification("Estado actualizado.");
+                         refreshNow();
                      } catch(error) {
                           console.error("Error updating status:", error);
                           showNotification("Error al actualizar el estado.", "error");
