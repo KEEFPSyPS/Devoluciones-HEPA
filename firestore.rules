@@ -23,9 +23,7 @@ service cloud.firestore {
             && request.resource.data.motivo is string
             && request.resource.data.fecha is string
             && request.resource.data.status == 'Pendiente';
-        allow update: if request.auth != null
-            && request.resource.data.folio == resource.data.folio
-            && request.resource.data.fecha == resource.data.fecha;
+        allow update: if request.auth != null;
         allow delete: if request.auth != null;
     }
 

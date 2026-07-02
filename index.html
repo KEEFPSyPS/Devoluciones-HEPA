@@ -34,20 +34,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
-        /* Custom styles for a better look */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* slate-50 */
+            background-color: #f8fafc;
         }
         .tab-button {
             transition: all 0.3s ease;
             position: relative;
         }
         .tab-button.active {
-            color: #2563eb; /* blue-600 */
-            background-color: #eff6ff; /* blue-50 */
+            color: #2563eb;
+            background-color: #eff6ff;
         }
         .tab-button.active::after {
             content: '';
@@ -61,10 +59,9 @@
             border-top-right-radius: 4px;
         }
         .dark .tab-button.active {
-            color: #60a5fa; /* blue-400 */
-            background-color: #1e293b; /* slate-800 */
+            color: #60a5fa;
+            background-color: #1e293b;
         }
-        /* Custom modal styles */
         .glass-effect {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -85,14 +82,11 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-700 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300">
 
-    <!-- Login Overlay -->
     <div id="login-overlay" class="fixed inset-0 bg-gradient-to-br from-slate-900 to-slate-800 z-50 flex items-center justify-center hidden">
         <div class="absolute inset-0 overflow-hidden">
-             <!-- Decorative blobs -->
             <div class="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
             <div class="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 translate-y-1/2"></div>
         </div>
-        
         <div class="glass-effect p-8 md:p-10 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-white/20 relative z-10">
             <div class="text-center mb-8">
                 <div class="bg-white p-2 rounded-xl inline-block shadow-md mb-4">
@@ -117,13 +111,11 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
     <div id="notification" class="fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg text-white z-50">
         <p id="notification-message"></p>
     </div>
 
     <div id="app-content" class="min-h-screen hidden flex flex-col">
-        <!-- Header Moderno -->
         <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm transition-colors duration-300">
             <div class="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -131,7 +123,6 @@
                     <div class="hidden md:block w-px h-6 bg-slate-300 dark:bg-slate-600 mx-2"></div>
                     <h1 class="hidden md:block text-lg font-bold text-slate-700 dark:text-white tracking-tight">Gestión de Devoluciones</h1>
                 </div>
-
                 <div class="flex items-center gap-4">
                     <button id="dark-mode-toggle" class="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" title="Alternar Modo Oscuro">
                         <i class="fas fa-moon dark:hidden"></i>
@@ -151,7 +142,6 @@
         </header>
 
         <main class="flex-grow container mx-auto px-4 md:px-8 py-8">
-            <!-- Tabs Navigation -->
             <div class="mb-8">
                 <div class="flex p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl inline-flex shadow-sm transition-colors duration-300">
                     <button data-tab="devoluciones" class="tab-button active flex-1 text-sm md:text-base py-2.5 px-6 font-semibold text-slate-500 dark:text-slate-400 rounded-lg hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none">
@@ -166,15 +156,12 @@
                 </div>
             </div>
 
-            <!-- Devoluciones Tab -->
             <div id="devoluciones" class="tab-content">
-                <!-- Add Return Form -->
                 <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 mb-8 transition-colors duration-300">
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
                         <div class="p-2 bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 rounded-lg"><i class="fas fa-plus-circle text-xl"></i></div>
                         <h2 class="text-xl font-bold text-slate-800 dark:text-white">Registrar Nueva Incidencia</h2>
                     </div>
-                    
                     <form id="form-devolucion" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-5">
                         <div>
                             <label for="quien_reporta" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Reporta</label>
@@ -236,23 +223,18 @@
                     </form>
                 </div>
 
-                <!-- Returns List -->
                 <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-300">
                      <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-6">Listado General</h2>
-                     
-                     <!-- Filters and Export -->
                     <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4 mb-6 p-5 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-600 transition-colors duration-300">
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 w-full xl:w-auto flex-grow">
                              <div class="flex flex-col gap-1.5">
                                  <label for="filtro-fecha-inicio" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Desde</label>
                                  <input type="date" id="filtro-fecha-inicio" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm shadow-sm">
                              </div>
-                             
                              <div class="flex flex-col gap-1.5">
                                  <label for="filtro-fecha-fin" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hasta</label>
                                  <input type="date" id="filtro-fecha-fin" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm shadow-sm">
                              </div>
-                             
                              <div class="flex flex-col gap-1.5">
                                  <label for="filtro-departamento" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Departamento</label>
                                  <select id="filtro-departamento" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm shadow-sm">
@@ -264,14 +246,12 @@
                                     <option value="RENAULT">RENAULT</option>
                                 </select>
                              </div>
-
                              <div class="flex flex-col gap-1.5">
                                 <label for="filtro-proveedor" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Proveedor</label>
                                 <select id="filtro-proveedor" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm shadow-sm">
                                     <option value="">Todos los Proveedores</option>
                                 </select>
                              </div>
-
                              <div class="flex flex-col gap-1.5">
                                 <label for="filtro-estado" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</label>
                                 <select id="filtro-estado" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm shadow-sm">
@@ -289,15 +269,12 @@
                             <button id="export-share" class="bg-white dark:bg-slate-800 border border-sky-100 dark:border-sky-900/30 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 font-medium py-1.5 px-3 rounded-lg text-sm transition-colors flex items-center shadow-sm"><i class="fas fa-share-alt mr-2"></i>Share</button>
                         </div>
                     </div>
-
-                    <!-- Search Bar -->
                      <div class="relative mb-6">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                             <i class="fas fa-search text-slate-400"></i>
                         </span>
                         <input type="text" id="barra-busqueda" placeholder="Buscar por folio, artículo, proveedor..." class="w-full py-3 pl-10 pr-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
                     </div>
-
                     <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                         <table class="w-full text-sm text-left text-slate-600 dark:text-slate-300">
                             <thead class="text-xs text-slate-700 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
@@ -318,7 +295,6 @@
                                 </tr>
                             </thead>
                             <tbody id="lista-devoluciones" class="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
-                                <!-- JS will populate this -->
                                 <tr><td colspan="13" class="text-center p-8 text-gray-500">Cargando registros...</td></tr>
                             </tbody>
                         </table>
@@ -326,10 +302,8 @@
                 </div>
             </div>
 
-            <!-- Proveedores Tab -->
             <div id="proveedores" class="tab-content hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <!-- Add Provider Form -->
                      <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 h-fit transition-colors duration-300">
                          <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">Registrar Nuevo</h2>
                          <form id="form-proveedor" class="space-y-4">
@@ -344,21 +318,17 @@
                             </div>
                         </form>
                      </div>
-                     <!-- Providers List -->
                      <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-300">
                          <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Directorio de Proveedores</h2>
                          <ul id="lista-proveedores" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            <!-- JS will populate this -->
                             <li class="text-center p-8 text-gray-500">Cargando proveedores...</li>
                          </ul>
                      </div>
                  </div>
             </div>
 
-            <!-- Empleados Tab -->
             <div id="empleados" class="tab-content hidden">
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <!-- Add Staff Form -->
                      <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 h-fit transition-colors duration-300">
                          <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">Registrar Empleado</h2>
                          <form id="form-empleado" class="space-y-4">
@@ -373,11 +343,9 @@
                             </div>
                         </form>
                      </div>
-                     <!-- Staff List -->
                      <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-300">
                          <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Directorio de Empleados</h2>
                          <ul id="lista-empleados" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            <!-- JS will populate this -->
                             <li class="text-center p-8 text-gray-500">Cargando empleados...</li>
                          </ul>
                      </div>
@@ -386,36 +354,27 @@
         </main>
     </div>
     
-    <!-- Firebase SDK -->
     <script type="module">
-        // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { initializeFirestore, collection, addDoc, doc, deleteDoc, updateDoc, setLogLevel, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // --- Configuration and Initialization ---
         const firebaseConfig = {
-        apiKey: "AIzaSyAludipJQEbPavFOEGut5ybNvsF6SSClAo",
-        authDomain: "devoluciones-hepa.firebaseapp.com",
-        projectId: "devoluciones-hepa",
-        storageBucket: "devoluciones-hepa.firebasestorage.app",
-        messagingSenderId: "468861245873",
-        appId: "1:468861245873:web:e116865404a7127392c590"
+            apiKey: "AIzaSyAludipJQEbPavFOEGut5ybNvsF6SSClAo",
+            authDomain: "devoluciones-hepa.firebaseapp.com",
+            projectId: "devoluciones-hepa",
+            storageBucket: "devoluciones-hepa.firebasestorage.app",
+            messagingSenderId: "468861245873",
+            appId: "1:468861245873:web:e116865404a7127392c590"
         };
         
         const app = initializeApp(firebaseConfig);
-        // Forzar uso de REST en lugar de WebChannel para evitar ERR_BLOCKED_BY_CLIENT
         const db = initializeFirestore(app, {
             experimentalForceLongPolling: true,
             experimentalAutoDetectLongPolling: false
         });
         const auth = getAuth(app);
-
-        // NOTA: Se usa polling REST en lugar de WebChannel/onSnapshot
-        // porque extensiones del navegador bloquean ERR_BLOCKED_BY_CLIENT en WebChannel.
-        // Los datos se refrescan cada 3 segundos via getDocs() (REST).
         
-        // Definir colecciones al inicio
         const providersCollection = collection(db, 'proveedores');
         const returnsCollection = collection(db, 'devoluciones');
         const staffCollection = collection(db, 'empleados');
@@ -427,13 +386,11 @@
         let allStaff = [];
         let pollingInterval = null;
 
-        // --- Authentication ---
         const loginOverlay = document.getElementById('login-overlay');
         const appContent = document.getElementById('app-content');
         const loginForm = document.getElementById('login-form');
         const logoutBtn = document.getElementById('logout-btn');
 
-        // --- Polling REST (reemplaza onSnapshot) ---
         async function fetchAllData() {
             try {
                 const [provSnap, retSnap, staffSnap] = await Promise.all([
@@ -448,7 +405,6 @@
                 allStaff = staffSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderStaff(allStaff);
                 
-                // Auto-eliminar registros antiguos aprobados (>6 meses)
                 const sixMonthsAgo = new Date();
                 sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
                 
@@ -472,15 +428,14 @@
             }
         }
 
-        // Forzar actualización inmediata después de cualquier acción
         function refreshNow() {
             fetchAllData();
         }
 
         function startPolling() {
             if (pollingInterval) return;
-            fetchAllData(); // Carga inicial
-            pollingInterval = setInterval(fetchAllData, 3000); // Refrescar cada 3s
+            fetchAllData();
+            pollingInterval = setInterval(fetchAllData, 3000);
         }
 
         function stopPolling() {
@@ -526,13 +481,11 @@
             }
         });
 
-        // --- UI Helper Functions ---
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             const messageP = document.getElementById('notification-message');
             messageP.textContent = message;
-
-            notification.className = 'fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg text-white z-50'; // Reset classes
+            notification.className = 'fixed top-5 right-5 w-auto max-w-sm p-4 rounded-lg shadow-lg text-white z-50';
             if (type === 'success') {
                 notification.classList.add('bg-green-500');
             } else if (type === 'error') {
@@ -540,7 +493,6 @@
             } else {
                 notification.classList.add('bg-blue-500');
             }
-            
             notification.classList.add('show');
             setTimeout(() => {
                 notification.classList.remove('show');
@@ -558,7 +510,6 @@
             }
         }
 
-        // --- Supplier Management ---
         const formProveedor = document.getElementById('form-proveedor');
         const nombreProveedorInput = document.getElementById('nombre_proveedor');
 
@@ -583,9 +534,12 @@
             const providerSelect = document.getElementById('proveedor');
             const filterProviderSelect = document.getElementById('filtro-proveedor');
             
+            // GUARDAR selecciones actuales antes de re-renderizar
+            const currentProviderValue = providerSelect.value;
+            const currentFilterValue = filterProviderSelect.value;
+            
             providerList.innerHTML = '';
             providerSelect.innerHTML = '<option value="">-- Seleccione un proveedor --</option>';
-            const currentFilter = filterProviderSelect.value;
             filterProviderSelect.innerHTML = '<option value="">Todos los Proveedores</option>';
             
             if (providers.length === 0) {
@@ -593,7 +547,6 @@
             }
 
             providers.forEach(provider => {
-                // Populate list
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 rounded-xl hover:bg-white dark:hover:bg-slate-700 hover:shadow-md transition-all group';
                 li.dataset.id = provider.id;
@@ -606,44 +559,28 @@
                 `;
                 providerList.appendChild(li);
 
-                // Populate select dropdown
                 const option = document.createElement('option');
                 option.value = provider.nombre;
                 option.textContent = provider.nombre;
                 providerSelect.appendChild(option);
                 
-                // Populate filter dropdown
                 const optionFilter = document.createElement('option');
                 optionFilter.value = provider.nombre;
                 optionFilter.textContent = provider.nombre;
                 filterProviderSelect.appendChild(optionFilter);
             });
-            if (currentFilter) filterProviderSelect.value = currentFilter;
+            
+            // RESTAURAR selecciones después de re-renderizar
+            if (currentProviderValue) providerSelect.value = currentProviderValue;
+            if (currentFilterValue) filterProviderSelect.value = currentFilterValue;
         }
-        
-        // --- Staff / Empleados Management ---
-        const formEmpleado = document.getElementById('form-empleado');
-        const nombreEmpleadoInput = document.getElementById('nombre_empleado');
-
-        formEmpleado.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nombre = nombreEmpleadoInput.value.trim();
-            if (nombre) {
-                try {
-                    await addDoc(staffCollection, { nombre });
-                    showNotification("Empleado guardado con éxito.");
-                    formEmpleado.reset();
-                    refreshNow();
-                } catch (error) {
-                    console.error("Error adding staff: ", error);
-                    showNotification("Error al guardar el empleado.", "error");
-                }
-            }
-        });
 
         function renderStaff(staffs) {
             const staffList = document.getElementById('lista-empleados');
             const selectReporta = document.getElementById('quien_reporta');
+            
+            // GUARDAR selección actual antes de re-renderizar
+            const currentReportaValue = selectReporta.value;
             
             staffList.innerHTML = '';
             selectReporta.innerHTML = '<option value="">-- Seleccione un empleado --</option>';
@@ -670,9 +607,30 @@
                 option.textContent = staff.nombre;
                 selectReporta.appendChild(option);
             });
+            
+            // RESTAURAR selección después de re-renderizar
+            if (currentReportaValue) selectReporta.value = currentReportaValue;
         }
 
-        // --- Returns Management ---
+        const formEmpleado = document.getElementById('form-empleado');
+        const nombreEmpleadoInput = document.getElementById('nombre_empleado');
+
+        formEmpleado.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = nombreEmpleadoInput.value.trim();
+            if (nombre) {
+                try {
+                    await addDoc(staffCollection, { nombre });
+                    showNotification("Empleado guardado con éxito.");
+                    formEmpleado.reset();
+                    refreshNow();
+                } catch (error) {
+                    console.error("Error adding staff: ", error);
+                    showNotification("Error al guardar el empleado.", "error");
+                }
+            }
+        });
+
         const formDevolucion = document.getElementById('form-devolucion');
 
         formDevolucion.addEventListener('submit', async (e) => {
@@ -691,7 +649,7 @@
             }
             
             const returnData = {
-                folio: Math.floor(1000 + Math.random() * 9000).toString(), // Genera folio de 4 dígitos
+                folio: Math.floor(1000 + Math.random() * 9000).toString(),
                 proveedor: document.getElementById('proveedor').value,
                 quien_reporta: document.getElementById('quien_reporta').value,
                 departamento: document.getElementById('departamento').value,
@@ -770,7 +728,6 @@
              });
         }
         
-        // --- Filtering and Searching ---
         function filterAndRender() {
             const searchTerm = document.getElementById('barra-busqueda').value.toLowerCase();
             const deptFilter = document.getElementById('filtro-departamento').value;
@@ -797,7 +754,6 @@
             renderReturns(filtered);
         }
 
-        // --- Data Export ---
         function getFilteredDataForExport() {
              const startDate = document.getElementById('filtro-fecha-inicio').value;
              const endDate = document.getElementById('filtro-fecha-fin').value;
@@ -811,7 +767,6 @@
                  data = data.filter(item => new Date(item.fecha) >= new Date(startDate));
              }
              if (endDate) {
-                // Add 1 day to end date to include the whole day
                 const end = new Date(endDate);
                 end.setDate(end.getDate() + 1);
                 data = data.filter(item => new Date(item.fecha) < end);
@@ -911,9 +866,6 @@
             }
         });
 
-
-        // --- Event Listeners and Initial Load ---
-            // Tab switching logic
             const tabs = document.querySelectorAll('.tab-button');
             const contents = document.querySelectorAll('.tab-content');
             tabs.forEach(tab => {
@@ -926,10 +878,8 @@
                 });
             });
 
-            // Search bar
             document.getElementById('barra-busqueda').addEventListener('input', filterAndRender);
 
-            // Conditional "Otro Motivo" field
             document.getElementById('motivo').addEventListener('change', (e) => {
                 const otroMotivoContainer = document.getElementById('otro-motivo-container');
                 if(e.target.value === 'Otros') {
@@ -939,7 +889,6 @@
                 }
             });
             
-        // Dark Mode Toggle Logic
         document.getElementById('dark-mode-toggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
             if (document.documentElement.classList.contains('dark')) {
@@ -949,14 +898,12 @@
             }
         });
 
-            // Date filters
             document.getElementById('filtro-fecha-inicio').addEventListener('change', () => {});
             document.getElementById('filtro-fecha-fin').addEventListener('change', () => {});
             document.getElementById('filtro-departamento').addEventListener('change', filterAndRender);
             document.getElementById('filtro-proveedor').addEventListener('change', filterAndRender);
             document.getElementById('filtro-estado').addEventListener('change', filterAndRender);
 
-            // Event delegation for dynamic elements
             document.body.addEventListener('click', async (e) => {
                 const deleteProviderBtn = e.target.closest('.delete-provider-btn');
                 const deleteReturnBtn = e.target.closest('.delete-return-btn');
@@ -971,7 +918,6 @@
                 const saveStaffBtn = e.target.closest('.save-staff-btn');
                 const cancelEditStaffBtn = e.target.closest('.cancel-edit-staff-btn');
 
-                // Delete Staff
                 if (deleteStaffBtn) {
                     const id = deleteStaffBtn.closest('li').dataset.id;
                     try {
@@ -984,7 +930,6 @@
                     }
                 }
 
-                // Edit Staff - Show input
                 if (editStaffBtn) {
                     const li = editStaffBtn.closest('li');
                     const staffNameSpan = li.querySelector('.staff-name');
@@ -1000,7 +945,6 @@
                     li.querySelector('.edit-staff-input').focus();
                 }
 
-                // Save Staff Edit
                 if (saveStaffBtn) {
                     const li = saveStaffBtn.closest('li');
                     const input = li.querySelector('.edit-staff-input');
@@ -1023,12 +967,10 @@
                     }
                 }
                 
-                // Cancel Staff Edit
                 if (cancelEditStaffBtn) {
-                    renderStaff(allStaff); // Re-render from cache to cancel the edit
+                    renderStaff(allStaff);
                 }
 
-                // Delete provider
                 if (deleteProviderBtn) {
                     const id = deleteProviderBtn.closest('li').dataset.id;
                     try {
@@ -1041,7 +983,6 @@
                     }
                 }
                 
-                // Delete return
                 if (deleteReturnBtn) {
                     const id = deleteReturnBtn.closest('tr').querySelector('[data-id]').dataset.id;
                      try {
@@ -1054,7 +995,6 @@
                     }
                 }
 
-                // Edit Provider - Show input
                 if (editProviderBtn) {
                     const li = editProviderBtn.closest('li');
                     const providerNameSpan = li.querySelector('.provider-name');
@@ -1070,7 +1010,6 @@
                     li.querySelector('.edit-provider-input').focus();
                 }
 
-                // Save Provider Edit
                 if (saveProviderBtn) {
                     const li = saveProviderBtn.closest('li');
                     const input = li.querySelector('.edit-provider-input');
@@ -1093,12 +1032,10 @@
                     }
                 }
                 
-                // Cancel Provider Edit
                 if (cancelEditBtn) {
-                    renderProviders(allProviders); // Re-render from cache to cancel the edit
+                    renderProviders(allProviders);
                 }
 
-                // Edit Return
                 if (editReturnBtn) {
                     const tr = editReturnBtn.closest('tr');
                     const id = editReturnBtn.dataset.id;
@@ -1107,7 +1044,7 @@
                     const provOptions = allProviders.map(p => `<option value="${p.nombre}" ${p.nombre === item.proveedor ? 'selected' : ''}>${p.nombre}</option>`).join('');
                     const deptOptions = ['VOLKSWAGEN', 'NISSAN', 'CHEVROLET', 'TOYOTA', 'RENAULT'].map(d => `<option value="${d}" ${d === item.departamento ? 'selected' : ''}>${d}</option>`).join('');
                     const repOptions = allStaff.map(s => `<option value="${s.nombre}" ${s.nombre === item.quien_reporta ? 'selected' : ''}>${s.nombre}</option>`).join('');
-                    const safeVal = (val) => (val || '').toString().replace(/"/g, '&quot;'); // Prevenir inyecciones HTML en campos de texto
+                    const safeVal = (val) => (val || '').toString().replace(/"/g, '"');
 
                     tr.innerHTML = `
                         <td class="px-6 py-4 font-mono font-bold text-slate-700 dark:text-slate-200">${item.folio || 'N/A'}</td>
@@ -1129,7 +1066,6 @@
                     `;
                 }
 
-                // Save Return Edit
                 if (saveReturnBtn) {
                     const tr = saveReturnBtn.closest('tr');
                     const id = saveReturnBtn.dataset.id;
@@ -1154,20 +1090,17 @@
                     }
                 }
 
-                // Cancel Return Edit
                 if (cancelEditReturnBtn) {
-                    filterAndRender(); // Re-renderiza la tabla para cancelar
+                    filterAndRender();
                 }
             });
             
              document.body.addEventListener('change', async (e) => {
-                 // Update status
                  if (e.target.classList.contains('status-select')) {
                      const select = e.target;
                      const id = select.dataset.id;
                      const newStatus = select.value;
                      
-                     // Find current item to get old status for reverting if needed
                      const currentItem = allReturns.find(i => i.id === id);
                      const oldStatus = currentItem ? currentItem.status : 'Pendiente';
                      
@@ -1215,7 +1148,6 @@
                  }
              });
 
-             // --- PWA Service Worker Registration ---
              if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('./sw.js')
@@ -1228,5 +1160,5 @@
              }
     </script>
 
-</body>
-</html>
+ </body>
+               

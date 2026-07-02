@@ -1,10 +1,9 @@
-const CACHE_NAME = 'hepa-garantias-v1';
+const CACHE_NAME = 'hepa-garantias-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './img/LogoHEPA.png',
     './img/logoAppHepa.png',
-    'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css'
 ];
 
@@ -14,7 +13,13 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Cache abierta');
-                return cache.addAll(ASSETS_TO_CACHE);
+                // Usar addAll con manejo de errores individual
+                const cachePromises = ASSETS_TO_CACHE.map(url => {
+                    return cache.add(url).catch(err => {
+                        console.warn(`No se pudo cachear: ${url}`, err);
+                    });
+                });
+                return Promise.all(cachePromises);
             })
     );
 });
@@ -26,6 +31,7 @@ self.addEventListener('activate', (event) => {
             return Promise.all(
                 cacheNames.map((cache) => {
                     if (cache !== CACHE_NAME) {
+                        console.log('Eliminando cache antigua:', cache);
                         return caches.delete(cache);
                     }
                 })
@@ -39,7 +45,6 @@ self.addEventListener('fetch', (event) => {
     const url = event.request.url;
     
     // NO interceptar NINGUNA petición a Firebase o Google APIs
-    // Esto incluye WebChannel/Streaming que Firestore usa en tiempo real
     if (url.includes('firebase') || 
         url.includes('googleapis.com') || 
         url.includes('gstatic.com') ||
@@ -48,8 +53,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     // Solo interceptar assets estáticos conocidos (Cache First)
-    if (url.includes('cdn.tailwindcss.com') || 
-        url.includes('cdnjs.cloudflare.com') ||
+    if (url.includes('cdnjs.cloudflare.com') ||
         url.includes('fonts.googleapis.com')) {
         event.respondWith(
             caches.match(event.request)
